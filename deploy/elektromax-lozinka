@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Postavljanje lozinke / pravljenje naloga na serveru:  elektromax-lozinka <korisnicko_ime>
+set -euo pipefail
+set -a; . /home/elektromax/elektromax.env; set +a
+exec sudo -H -u elektromax env ELEKTROMAX_DB="$ELEKTROMAX_DB" \
+  /home/elektromax/app/.venv/bin/python /home/elektromax/app/deploy/lozinka.py "$@"

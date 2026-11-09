@@ -1,0 +1,20 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ p.broj }}{% endblock %}
+{% block content %}
+<div class="head"><div><h1>Prijem {{ p.broj }}</h1><p><a href="{{ url_for('nabavka.prijemi') }}">← Svi prijemi</a></p></div></div>
+<div class="grid2">
+  <div class="card"><div class="table-wrap"><table class="t siroka">
+    <thead><tr><th>Artikal</th><th class="num">Količina</th><th class="num">Nab. cena</th><th class="num">Iznos</th></tr></thead>
+    <tbody>{% set ns = namespace(uk=0) %}
+    {% for s in stavke %}{% set ns.uk = ns.uk + s.kolicina * (s.nabavna_cena or 0) %}
+      <tr><td><a class="naziv" href="{{ url_for('nabavka.kartica', aid=s.artikal_id) }}">{{ s.naziv }}</a><small>{{ s.sifra }}</small></td>
+        <td class="num">{{ s.kolicina }} {{ s.jedinica_mere }}</td><td class="num">{{ s.nabavna_cena | din if s.nabavna_cena is not none else '—' }}</td>
+        <td class="num">{{ (s.kolicina * (s.nabavna_cena or 0)) | din }}</td></tr>
+    {% endfor %}
+    <tr><td colspan="3" class="num"><b>Ukupno (bez PDV):</b></td><td class="num"><b>{{ ns.uk | din }}</b></td></tr>
+    </tbody></table></div></div>
+  <div class="card card-pad"><h2>Podaci</h2>
+    <p>Dobavljač: <b>{{ p.dobavljac or '—' }}</b><br>Dokument: {{ p.dokument or '—' }}<br>Narudžbenica: {{ p.narudzbenica or '—' }}<br>
+      Datum: {{ p.vreme }}<br>Primio: {{ p.korisnik }}{% if p.napomena %}<br>Napomena: {{ p.napomena }}{% endif %}</p></div>
+</div>
+{% endblock %}

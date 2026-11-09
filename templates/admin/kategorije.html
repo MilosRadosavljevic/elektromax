@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+{% block title %}Kategorije{% endblock %}
+{% block content %}
+<div class="head">
+  <div>
+    <h1>Kategorije</h1>
+    <p>Redosled određuje raspored na sajtu (manji broj = ranije).</p>
+  </div>
+  <a class="btn btn-volt" href="{{ url_for('admin_kategorija') }}"><svg><use href="#i-plus"/></svg>Nova kategorija</a>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table class="t">
+      <thead><tr><th>Kategorija</th><th class="hide-sm">URL oznaka</th><th class="num">Redosled</th><th class="num">Artikala</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for k in kategorije %}
+        <tr class="{{ 'off' if not k.aktivna }}">
+          <td><div class="cell-art"><div class="thumb"><svg style="color:var(--ink)"><use href="#i-{{ k.ikonica }}"/></svg></div>
+            <div><a class="naziv" href="{{ url_for('admin_kategorija', id=k.id) }}">{{ k.naziv }}</a><small>{{ k.opis | truncate(60) }}</small></div></div></td>
+          <td class="hide-sm"><code>{{ k.slug }}</code></td>
+          <td class="num">{{ k.redosled }}</td>
+          <td class="num"><a href="{{ url_for('admin_artikli', kategorija=k.id) }}">{{ k.broj }}</a></td>
+          <td>{% if k.aktivna %}<span class="pill ok">Aktivna</span>{% else %}<span class="pill off">Sakrivena</span>{% endif %}</td>
+          <td><div class="akcije">
+            <a class="icon-btn" href="{{ url_for('admin_kategorija', id=k.id) }}" title="Izmeni" aria-label="Izmeni"><svg><use href="#i-edit"/></svg></a>
+            <form method="post" action="{{ url_for('admin_kategorija_obrisi', id=k.id) }}" data-potvrda="Obrisati kategoriju „{{ k.naziv }}“?">
+              <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+              <button class="icon-btn danger" type="submit" title="Obriši" aria-label="Obriši" {{ 'disabled' if k.broj }}><svg><use href="#i-trash"/></svg></button>
+            </form>
+          </div></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<p style="color:var(--muted);font-size:13px;margin-top:10px">Kategorija sa artiklima ne može da se obriše – prvo premestite ili obrišite artikle, ili je samo sakrijte.</p>
+{% endblock %}

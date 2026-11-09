@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+{% block title %}Narudžbenice{% endblock %}
+{% set STATUS = {'nacrt': ('Nacrt', 'off'), 'poslata': ('Poslata', 'volt'), 'primljena': ('Primljena', 'ok'), 'otkazana': ('Otkazana', 'bad')} %}
+{% block content %}
+<div class="head">
+  <div><h1>Narudžbenice</h1><p>Nastaju iz liste „Za naručiti“. Kad roba stigne, otvorite narudžbenicu i kliknite „Primi robu“.</p></div>
+  <a class="btn btn-volt" href="{{ url_for('nabavka.za_naruciti') }}"><svg><use href="#i-cart"/></svg>Za naručiti</a>
+</div>
+<div class="card">
+  <form class="filters">
+    <select name="status" onchange="this.form.submit()" aria-label="Status">
+      <option value="">Sve narudžbenice</option>
+      {% for k, v in STATUS.items() %}<option value="{{ k }}" {{ 'selected' if status == k }}>{{ v[0] }}</option>{% endfor %}
+    </select>
+  </form>
+  <div class="table-wrap"><table class="t siroka">
+    <thead><tr><th>Broj</th><th>Dobavljač</th><th>Datum</th><th class="num">Stavki</th><th class="num">Vrednost (nab.)</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for n in lista %}
+      <tr><td><a class="naziv" href="{{ url_for('nabavka.narudzbenica', nid=n.id) }}">{{ n.broj }}</a></td>
+        <td>{{ n.dobavljac }}</td><td>{{ n.vreme[:16] }}</td><td class="num">{{ n.stavki }}</td>
+        <td class="num">{{ n.vrednost | din if n.vrednost else '—' }}</td>
+        <td><span class="pill {{ STATUS[n.status][1] }}">{{ STATUS[n.status][0] }}</span></td></tr>
+    {% else %}
+      <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">Nema narudžbenica.</td></tr>
+    {% endfor %}
+    </tbody></table></div>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="sr-Latn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Narudžbenica {{ n.broj }}</title>
+<style>
+  body{font-family:"Segoe UI",Arial,sans-serif;font-size:10pt;color:#111;margin:0;padding:24px;background:#fff}
+  .str{max-width:800px;margin:0 auto;overflow-x:auto}
+  .str>table{min-width:560px}
+  @media (max-width:600px){body{padding:12px} h1{font-size:18pt}}
+  h1{font-size:22pt;margin:0} .logo{font-size:18pt;font-weight:800} .logo span{color:#c98f00}
+  table{width:100%;border-collapse:collapse} .zag td{vertical-align:top}
+  .st th{background:#14171c;color:#fff;text-align:left;padding:6px} .st td{border-bottom:1px solid #ccc;padding:6px}
+  .num{text-align:right} .box{background:#f3f1ec;padding:10px;margin:14px 0}
+  .alat{margin:0 auto 16px;max-width:800px;display:flex;gap:8px}
+  .alat button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid #ccc;background:#ffc21a;font-weight:700;cursor:pointer}
+  @media print{.alat{display:none} body{padding:0} .str{overflow:visible}}
+</style></head><body>
+<div class="alat"><button onclick="window.print()">Štampaj / sačuvaj kao PDF</button></div>
+<div class="str">
+  <table class="zag"><tr>
+    <td><div class="logo">ELEKTRO<span>MAX</span></div><b>{{ FIRMA.naziv }}</b><br>{{ FIRMA.adresa }}, {{ FIRMA.mesto }}<br>
+      PIB: {{ FIRMA.pib }} · MB: {{ FIRMA.mb }}<br>Tel: {{ FIRMA.telefon }} · {{ FIRMA.email }}</td>
+    <td style="text-align:right"><h1>NARUDŽBENICA</h1>Broj: <b>{{ n.broj }}</b><br>Datum: {{ n.vreme[8:10] }}.{{ n.vreme[5:7] }}.{{ n.vreme[:4] }}.</td>
+  </tr></table>
+  <div class="box"><small>DOBAVLJAČ</small><br><b>{{ n.dobavljac }}</b><br>{{ n.adresa }}{% if n.pib %}<br>PIB: {{ n.pib }}{% endif %}</div>
+  <table class="st"><thead><tr><th>R.br.</th><th>Šifra</th><th>Naziv</th><th>JM</th><th class="num">Količina</th></tr></thead>
+    <tbody>{% for s in stavke %}<tr><td>{{ loop.index }}</td><td>{{ s.sifra }}</td><td>{{ s.naziv }}</td><td>{{ s.jedinica_mere }}</td><td class="num"><b>{{ s.kolicina }}</b></td></tr>{% endfor %}</tbody></table>
+  {% if n.napomena %}<p><b>Napomena:</b> {{ n.napomena }}</p>{% endif %}
+  <p>Molimo potvrdu prijema narudžbenice i rok isporuke.</p>
+  <p style="margin-top:60px">______________________<br>Naručio: {{ n.korisnik }}</p>
+</div></body></html>

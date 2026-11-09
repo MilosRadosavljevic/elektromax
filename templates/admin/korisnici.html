@@ -1,0 +1,30 @@
+{% extends "admin/base.html" %}
+{% block title %}Korisnici{% endblock %}
+{% block content %}
+<div class="head">
+  <div>
+    <h1>Korisnici</h1>
+    <p><b>Radnik</b> uređuje artikle i radno vreme. <b>Admin</b> još i kategorije i korisnike.</p>
+  </div>
+  <a class="btn btn-volt" href="{{ url_for('admin_korisnik') }}"><svg><use href="#i-plus"/></svg>Novi korisnik</a>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table class="t">
+      <thead><tr><th>Ime</th><th>Korisničko ime</th><th>Uloga</th><th>Status</th><th class="hide-sm">Kreiran</th><th></th></tr></thead>
+      <tbody>
+      {% for k in korisnici %}
+        <tr class="{{ 'off' if not k.aktivan }}">
+          <td><a class="naziv" href="{{ url_for('admin_korisnik', id=k.id) }}">{{ k.ime }}</a>{% if k.id == korisnik.id %}<small>(vi)</small>{% endif %}</td>
+          <td>{{ k.korisnicko_ime }}</td>
+          <td><span class="pill {{ 'volt' if k.uloga == 'admin' else 'off' }}">{{ k.uloga }}</span></td>
+          <td>{% if k.aktivan %}<span class="pill ok">Aktivan</span>{% else %}<span class="pill off">Blokiran</span>{% endif %}</td>
+          <td class="hide-sm">{{ k.kreirano[:10] }}</td>
+          <td><div class="akcije"><a class="icon-btn" href="{{ url_for('admin_korisnik', id=k.id) }}" title="Izmeni" aria-label="Izmeni"><svg><use href="#i-edit"/></svg></a></div></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

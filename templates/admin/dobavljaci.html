@@ -1,0 +1,18 @@
+{% extends "admin/base.html" %}
+{% block title %}Dobavljači{% endblock %}
+{% block content %}
+<div class="head">
+  <div><h1>Dobavljači</h1><p>Dobavljač se dodeljuje artiklu; lista „Za naručiti“ grupiše artikle po dobavljaču.</p></div>
+  <a class="btn btn-volt" href="{{ url_for('nabavka.dobavljac') }}"><svg><use href="#i-plus"/></svg>Novi dobavljač</a>
+</div>
+<div class="card"><div class="table-wrap"><table class="t siroka">
+  <thead><tr><th>Naziv</th><th class="hide-sm">PIB</th><th>Kontakt</th><th class="num">Rok isporuke</th><th class="num">Artikala</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for d in lista %}
+    <tr class="{{ 'off' if not d.aktivan }}"><td><a class="naziv" href="{{ url_for('nabavka.dobavljac', did=d.id) }}">{{ d.naziv }}</a><small>{{ d.adresa }}</small></td>
+      <td class="hide-sm">{{ d.pib }}</td><td>{{ d.kontakt }}<small>{{ d.telefon }} {{ d.email }}</small></td>
+      <td class="num">{{ d.rok_isporuke }} dana</td><td class="num">{{ d.artikala }}</td>
+      <td>{% if d.aktivan %}<span class="pill ok">Aktivan</span>{% else %}<span class="pill off">Neaktivan</span>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">Nema dobavljača.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

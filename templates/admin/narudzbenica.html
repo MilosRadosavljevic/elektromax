@@ -1,0 +1,49 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ n.broj }}{% endblock %}
+{% set STATUS = {'nacrt': ('Nacrt', 'off'), 'poslata': ('Poslata', 'volt'), 'primljena': ('Primljena', 'ok'), 'otkazana': ('Otkazana', 'bad')} %}
+{% block content %}
+<div class="head">
+  <div><h1>Narudžbenica {{ n.broj }}</h1>
+    <p><a href="{{ url_for('nabavka.narudzbenice') }}">← Sve narudžbenice</a> · <span class="pill {{ STATUS[n.status][1] }}">{{ STATUS[n.status][0] }}</span></p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a class="btn btn-line" href="{{ url_for('nabavka.narudzbenica_stampa', nid=n.id) }}" target="_blank"><svg><use href="#i-print"/></svg>Štampa / PDF</a>
+    {% if n.status in ('nacrt', 'poslata') %}
+    <a class="btn btn-volt" href="{{ url_for('nabavka.prijem_novi', narudzbenica=n.id) }}"><svg><use href="#i-inbox"/></svg>Primi robu</a>
+    {% endif %}
+  </div>
+</div>
+<div class="grid2">
+  <form class="card" method="post">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <div class="table-wrap"><table class="t siroka">
+      <thead><tr><th>Artikal</th><th class="num">Trenutno stanje</th><th class="num">Nab. cena</th><th class="num">Količina</th></tr></thead>
+      <tbody>
+      {% for s in stavke %}
+        <tr><td><b>{{ s.naziv }}</b><small>{{ s.sifra }}</small></td><td class="num">{{ s.stanje }} {{ s.jedinica_mere }}</td>
+          <td class="num">{{ s.nabavna_cena | din if s.nabavna_cena else '—' }}</td>
+          <td class="num">{% if n.status == 'nacrt' %}<input type="number" min="0" name="kol_{{ s.id }}" value="{{ s.kolicina }}" class="kol-unos">{% else %}{{ s.kolicina }} {{ s.jedinica_mere }}{% endif %}</td></tr>
+      {% endfor %}
+      </tbody></table></div>
+    {% if n.status == 'nacrt' %}
+    <div class="card-pad">
+      <div class="field"><label for="napomena">Napomena za dobavljača</label><textarea id="napomena" name="napomena" style="min-height:70px">{{ n.napomena }}</textarea></div>
+      <div class="form-actions">
+        <button class="btn btn-dark" name="akcija" value="sacuvaj">Sačuvaj izmene</button>
+        <button class="btn btn-volt" name="akcija" value="poslata">Označi kao poslatu</button>
+        <button class="btn btn-danger" name="akcija" value="otkazi" formnovalidate>Otkaži</button>
+      </div>
+      <p class="meta">Količina 0 uklanja stavku.</p>
+    </div>
+    {% elif n.status == 'poslata' %}
+    <div class="card-pad"><button class="btn btn-danger" name="akcija" value="otkazi">Otkaži narudžbenicu</button></div>
+    {% endif %}
+  </form>
+  <div class="card card-pad">
+    <h2>Dobavljač</h2>
+    <p><b>{{ n.dobavljac }}</b><br>{{ n.adresa }}<br>{% if n.pib %}PIB: {{ n.pib }}<br>{% endif %}
+      {% if n.kontakt %}Kontakt: {{ n.kontakt }}<br>{% endif %}{{ n.telefon }}<br>{{ n.email }}</p>
+    {% if n.email %}<p class="meta">Narudžbenicu odštampajte u PDF („Štampa / PDF“ → Sačuvaj kao PDF) i pošaljite na {{ n.email }}.</p>{% endif %}
+    <p class="meta">Napravio: {{ n.korisnik }} · {{ n.vreme }}</p>
+  </div>
+</div>
+{% endblock %}

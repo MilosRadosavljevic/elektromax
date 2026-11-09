@@ -1,0 +1,75 @@
+{% extends "admin/base.html" %}
+{% block title %}Za naručiti{% endblock %}
+{% block content %}
+<div class="head">
+  <div>
+    <h1>Za naručiti</h1>
+    <p>Predlog na osnovu prodaje u poslednjih {{ dana }} dana: zaliha za {{ pokrivenost }} dana + rok isporuke, najmanje 2 × minimalna količina, umanjeno za robu na putu.</p>
+  </div>
+  <div style="display:flex;gap:8px">
+    {% if svi %}<a class="btn btn-line" href="{{ url_for('nabavka.za_naruciti') }}">Samo ono što treba naručiti</a>
+    {% else %}<a class="btn btn-line" href="{{ url_for('nabavka.za_naruciti', svi=1) }}">Prikaži sve artikle</a>{% endif %}
+  </div>
+</div>
+
+<div class="legenda">
+  <span class="pill bad">Nema na stanju</span>
+  <span class="pill volt">Kritično – ispod minimuma ili nestaje pre isporuke</span>
+  <span class="pill off">Uskoro – nestaje za manje od 14 dana</span>
+</div>
+
+{% if not grupe %}
+<div class="card card-pad" style="text-align:center;color:var(--muted);padding:50px">
+  <b style="color:var(--ok)">Sve je na stanju.</b><br>Nijedan artikal trenutno ne treba naručiti.
+</div>
+{% else %}
+<form method="post" action="{{ url_for('nabavka.naruci') }}">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  {% for dobavljac, lista in grupe.items() %}
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-pad" style="padding-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+      <h2 style="margin:0">{{ dobavljac }}</h2>
+      <label class="switch"><input type="checkbox" data-grupa="{{ loop.index }}" checked> označi sve</label>
+    </div>
+    <div class="table-wrap">
+      <table class="t siroka">
+        <thead><tr><th style="width:36px"></th><th>Artikal</th><th class="num">Stanje</th><th class="num hide-sm">Min.</th>
+          <th class="num hide-sm">Prodato {{ dana }}d</th><th class="num hide-sm">Dnevno</th><th class="num">Dana do nestanka</th>
+          <th class="num hide-sm">Na putu</th><th class="num">Naruči</th></tr></thead>
+        <tbody>
+        {% for x in lista %}
+          <tr>
+            <td><input type="checkbox" name="artikal" value="{{ x.id }}" title="{{ 'Artikal nema dobavljača' if not x.dobavljac_id }}" {{ 'checked' if x.predlog > 0 and x.hitnost != 'ok' }} {{ 'disabled' if not x.dobavljac_id }}></td>
+            <td><a class="naziv" href="{{ url_for('nabavka.kartica', aid=x.id) }}">{{ x.naziv }}</a><small>{{ x.sifra }}{{ ' · sakriven' if not x.aktivan }}</small></td>
+            <td class="num">
+              {% if x.hitnost == 'nema' %}<span class="pill bad">{{ x.stanje }}</span>
+              {% elif x.hitnost == 'kriticno' %}<span class="pill volt">{{ x.stanje }}</span>
+              {% elif x.hitnost == 'uskoro' %}<span class="pill off">{{ x.stanje }}</span>
+              {% else %}{{ x.stanje }}{% endif %} <small style="display:inline">{{ x.jedinica_mere }}</small></td>
+            <td class="num hide-sm">{{ x.min_kolicina }}</td>
+            <td class="num hide-sm">{{ x.prodato | broj }}</td>
+            <td class="num hide-sm">{{ '%.1f' | format(x.dnevno) if x.dnevno else '—' }}</td>
+            <td class="num">{{ '%.0f' | format(x.dana_do_nestanka) if x.dana_do_nestanka is not none else '—' }}</td>
+            <td class="num hide-sm">{{ x.na_putu or '' }}</td>
+            <td class="num"><input type="number" min="0" step="1" name="kol_{{ x.id }}" value="{{ x.predlog }}" class="kol-unos"></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+  <div class="form-actions" style="position:sticky;bottom:0;background:var(--bg);padding:12px 0">
+    <button class="btn btn-volt" type="submit"><svg><use href="#i-cart"/></svg>Napravi narudžbenice za označeno</button>
+    <span style="color:var(--muted);font-size:13px;align-self:center">Za svakog dobavljača pravi se posebna narudžbenica (nacrt) koju možete izmeniti pre slanja.</span>
+  </div>
+</form>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll("[data-grupa]").forEach(sw => sw.addEventListener("change", () => {
+    sw.closest(".card").querySelectorAll("input[name=artikal]:not(:disabled)").forEach(c => c.checked = sw.checked);
+  }));
+</script>
+{% endblock %}

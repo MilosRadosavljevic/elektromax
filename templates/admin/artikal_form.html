@@ -1,0 +1,187 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Izmena artikla' if postojeci else 'Novi artikal' }}{% endblock %}
+
+{% macro greska(polje) %}{% if greske.get(polje) %}<span class="err-msg">{{ greske[polje] }}</span>{% endif %}{% endmacro %}
+
+{% block content %}
+<div class="head">
+  <div>
+    <h1>{{ 'Izmena artikla' if postojeci else 'Novi artikal' }}</h1>
+    <p><a href="{{ url_for('admin_artikli') }}">← Nazad na listu artikala</a></p>
+  </div>
+  {% if postojeci %}
+  <a class="btn btn-line" href="{{ url_for('nabavka.kartica', aid=postojeci.id) }}"><svg><use href="#i-list"/></svg>Kartica artikla</a>
+  {% endif %}
+  {% if postojeci and postojeci.aktivan %}
+  <a class="btn btn-line" href="{{ url_for('artikal', id=postojeci.id) }}" target="_blank"><svg><use href="#i-ext"/></svg>Pogledaj na sajtu</a>
+  {% endif %}
+</div>
+
+<form method="post" enctype="multipart/form-data" novalidate>
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  <div class="form-grid">
+    <div class="card card-pad">
+      <div class="fields">
+        <div class="field full {{ 'err' if greske.naziv }}">
+          <label for="naziv">Naziv artikla *</label>
+          <input type="text" id="naziv" name="naziv" value="{{ a.naziv or '' }}" placeholder="npr. Kabl PP-Y 3x2,5 mm²" autofocus>
+          {{ greska('naziv') }}
+        </div>
+        <div class="field {{ 'err' if greske.sifra }}">
+          <label for="sifra">Šifra *</label>
+          <input type="text" id="sifra" name="sifra" value="{{ a.sifra or '' }}" placeholder="npr. KAB-007">
+          {{ greska('sifra') }}
+        </div>
+        <div class="field {{ 'err' if greske.kategorija_id }}">
+          <label for="kategorija_id">Kategorija *</label>
+          <select id="kategorija_id" name="kategorija_id">
+            <option value="">— izaberite —</option>
+            {% for k in kategorije %}
+            <option value="{{ k.id }}" {{ 'selected' if a.kategorija_id|string == k.id|string }}>{{ k.naziv }}{{ ' (neaktivna)' if not k.aktivna }}</option>
+            {% endfor %}
+          </select>
+          {{ greska('kategorija_id') }}
+        </div>
+        <div class="field {{ 'err' if greske.cena }}">
+          <label for="cena">Cena sa PDV-om *</label>
+          <div class="suffix"><input type="number" step="0.01" min="0" id="cena" name="cena" value="{{ a.cena | broj }}"><span>RSD</span></div>
+          {{ greska('cena') }}
+        </div>
+        <div class="field {{ 'err' if greske.akcijska_cena }}">
+          <label for="akcijska_cena">Akcijska cena</label>
+          <div class="suffix"><input type="number" step="0.01" min="0" id="akcijska_cena" name="akcijska_cena" value="{{ a.akcijska_cena | broj }}"><span>RSD</span></div>
+          <span class="help">Ostavite prazno ako artikal nije na akciji.</span>
+          {{ greska('akcijska_cena') }}
+        </div>
+        <div class="field {{ 'err' if greske.jedinica_mere }}">
+          <label for="jedinica_mere">Jedinica mere</label>
+          <select id="jedinica_mere" name="jedinica_mere">
+            {% for k, v in JEDINICE_MERE.items() %}<option value="{{ k }}" {{ 'selected' if a.jedinica_mere == k }}>{{ v }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field {{ 'err' if greske.stanje }}">
+          <label for="stanje">Stanje na lageru</label>
+          <input type="number" min="0" step="1" id="stanje" name="stanje" value="{{ a.stanje if a.stanje is not none else 0 }}" data-staro="{{ a.stanje if a.stanje is not none else 0 }}">
+          <span class="help">{% if postojeci %}Promena se beleži kao korekcija na kartici artikla.{% else %}Početno stanje.{% endif %} 0 = na sajtu „Po porudžbini“.</span>
+          {{ greska('stanje') }}
+        </div>
+        {% if postojeci %}
+        <div class="field full" id="korekcija-razlog" hidden>
+          <label for="stanje_napomena">Razlog promene stanja</label>
+          <input type="text" id="stanje_napomena" name="stanje_napomena" value="{{ a.stanje_napomena or '' }}" placeholder="npr. popis, oštećena roba, greška pri unosu">
+        </div>
+        {% endif %}
+      </div>
+      <h3 class="sekcija">Nabavka i porez</h3>
+      <div class="fields">
+        <div class="field {{ 'err' if greske.nabavna_cena }}">
+          <label for="nabavna_cena">Nabavna cena (bez PDV-a)</label>
+          <div class="suffix"><input type="number" step="0.01" min="0" id="nabavna_cena" name="nabavna_cena" value="{{ a.nabavna_cena | broj }}"><span>RSD</span></div>
+          <span class="help">Automatski se ažurira pri prijemu robe. Koristi se za obračun zarade.</span>
+          {{ greska('nabavna_cena') }}
+        </div>
+        <div class="field {{ 'err' if greske.pdv_stopa }}">
+          <label for="pdv_stopa">PDV stopa</label>
+          <select id="pdv_stopa" name="pdv_stopa">
+            {% for st, l in [(20, '20% – opšta stopa'), (10, '10% – posebna stopa'), (0, '0% – oslobođeno')] %}
+            <option value="{{ st }}" {{ 'selected' if (a.pdv_stopa or 20)|int == st }}>{{ l }}</option>
+            {% endfor %}
+          </select>
+          {{ greska('pdv_stopa') }}
+        </div>
+        <div class="field {{ 'err' if greske.min_kolicina }}">
+          <label for="min_kolicina">Minimalna količina</label>
+          <input type="number" min="0" step="1" id="min_kolicina" name="min_kolicina" value="{{ a.min_kolicina if a.min_kolicina is not none else 0 }}">
+          <span class="help">Kad stanje padne na ovu količinu, artikal ide na listu „Za naručiti“.</span>
+          {{ greska('min_kolicina') }}
+        </div>
+        <div class="field">
+          <label for="dobavljac_id">Dobavljač</label>
+          <select id="dobavljac_id" name="dobavljac_id">
+            <option value="">— nije određen —</option>
+            {% for d in dobavljaci %}<option value="{{ d.id }}" {{ 'selected' if a.dobavljac_id|string == d.id|string }}>{{ d.naziv }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <h3 class="sekcija">Opis</h3>
+      <div class="fields">
+        <div class="field full">
+          <label for="proizvodjac">Proizvođač</label>
+          <input type="text" id="proizvodjac" name="proizvodjac" value="{{ a.proizvodjac or '' }}">
+        </div>
+        <div class="field full">
+          <label for="opis">Opis</label>
+          <textarea id="opis" name="opis" placeholder="Kratak opis, namena, tehničke karakteristike…">{{ a.opis or '' }}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="card card-pad">
+        <h2 style="font-size:20px;margin-bottom:10px">Slika</h2>
+        <div class="img-preview" id="preview">
+          {% if postojeci and postojeci.slika %}<img src="{{ url_for('static', filename='uploads/' ~ postojeci.slika) }}" alt="">
+          {% else %}<svg><use href="#i-box"/></svg>{% endif %}
+        </div>
+        <div class="field {{ 'err' if greske.slika }}">
+          <input type="file" name="slika" id="slika" accept=".jpg,.jpeg,.png,.webp">
+          <span class="help">JPG, PNG ili WEBP, najviše 4 MB.</span>
+          {{ greska('slika') }}
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label for="slika_kredit">Autor / licenca slike</label>
+          <input type="text" id="slika_kredit" name="slika_kredit" value="{{ a.slika_kredit or '' }}" placeholder="npr. Foto: Petar P., CC BY-SA 4.0">
+          <span class="help">Obavezno ako slika nije vaša (slobodne licence traže navođenje autora).</span>
+        </div>
+        <div class="field {{ 'err' if greske.slika_izvor }}" style="margin-top:10px">
+          <label for="slika_izvor">Link izvora slike</label>
+          <input type="text" id="slika_izvor" name="slika_izvor" value="{{ a.slika_izvor or '' }}" placeholder="https://commons.wikimedia.org/…">
+          {{ greska('slika_izvor') }}
+        </div>
+        {% if postojeci and postojeci.slika %}
+        <label class="check" style="margin-top:10px"><input type="checkbox" name="ukloni_sliku" value="1"><span><b>Ukloni sliku</b></span></label>
+        {% endif %}
+      </div>
+      <div class="card card-pad stack">
+        <label class="check"><input type="checkbox" name="aktivan" value="1" {{ 'checked' if a.aktivan }}><span><b>Vidljiv na sajtu</b><span>Isključite da sakrijete artikal bez brisanja.</span></span></label>
+        <label class="check"><input type="checkbox" name="istaknut" value="1" {{ 'checked' if a.istaknut }}><span><b>Istaknut na početnoj</b><span>Prikazuje se u delu „Iz ponude“.</span></span></label>
+      </div>
+      {% if postojeci %}
+      <div class="meta">Kreirano: {{ postojeci.kreirano }}<br>Poslednja izmena: {{ postojeci.izmenjeno }}{{ ' (' ~ postojeci.izmenio ~ ')' if postojeci.izmenio }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button class="btn btn-volt" type="submit" name="akcija" value="sacuvaj">Sačuvaj</button>
+    <button class="btn btn-dark" type="submit" name="akcija" value="sacuvaj_i_novi">Sačuvaj i dodaj novi</button>
+    <a class="btn btn-line" href="{{ url_for('admin_artikli') }}">Otkaži</a>
+  </div>
+</form>
+
+{% if postojeci %}
+<form method="post" action="{{ url_for('admin_artikal_obrisi', id=postojeci.id) }}" data-potvrda="Obrisati artikal „{{ postojeci.naziv }}“? Ovo se ne može poništiti." style="margin-top:28px">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  <button class="btn btn-danger" type="submit"><svg><use href="#i-trash"/></svg>Obriši artikal</button>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Razlog korekcije se traži samo kad se stanje promeni
+  const st = document.getElementById("stanje"), rz = document.getElementById("korekcija-razlog");
+  if (st && rz) {
+    const prikazi = () => { rz.hidden = st.value === st.dataset.staro; };
+    st.addEventListener("input", prikazi); prikazi();
+  }
+  // Pregled izabrane slike pre čuvanja
+  document.getElementById("slika").addEventListener("change", e => {
+    const f = e.target.files[0], box = document.getElementById("preview");
+    if (!f) return;
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(f);
+    box.replaceChildren(img);
+  });
+</script>
+{% endblock %}

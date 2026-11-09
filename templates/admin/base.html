@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="sr-Latn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>{% block title %}Admin{% endblock %} | Elektromax admin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2314171c'/%3E%3Cpath d='M36 6 14 36h14l-4 22 22-30H32z' fill='%23ffc21a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+{% include "_ikonice.html" %}
+{% set ep = request.endpoint or '' %}
+<div class="layout">
+  <aside class="sidebar">
+    <a class="logo" href="{{ url_for('admin_pocetna') }}">
+      <span class="logo-mark"><svg><use href="#i-bolt"/></svg></span>
+      <span><span class="logo-text">Elektro<span>max</span></span><small>Admin panel</small></span>
+    </a>
+    {% set zn = ZA_NARUCITI() %}
+    <button class="meni-dugme" id="meni-dugme" type="button" aria-expanded="false" aria-controls="side-nav"><svg><use href="#i-menu"/></svg>Meni{% if zn %}<span class="side-broj">{{ zn }}</span>{% endif %}</button>
+    <nav class="side-nav" id="side-nav" aria-label="Glavni meni">
+    <a class="side-link {{ 'on' if ep == 'admin_pocetna' }}" href="{{ url_for('admin_pocetna') }}"><svg><use href="#i-home"/></svg>Početna</a>
+    {% if 'analitika.pregled' in URL_MAPA %}<a class="side-link {{ 'on' if ep.startswith('analitika.') }}" href="{{ url_for('analitika.pregled') }}"><svg><use href="#i-chart"/></svg>Analitika</a>{% endif %}
+    <div class="side-grupa">Prodaja</div>
+    <a class="side-link {{ 'on' if ep.startswith('prodaja.racun') }}" href="{{ url_for('prodaja.racuni') }}"><svg><use href="#i-receipt"/></svg>Računi</a>
+    <a class="side-link {{ 'on' if ep.startswith('prodaja.kupc') }}" href="{{ url_for('prodaja.kupci') }}"><svg><use href="#i-users"/></svg>Kupci</a>
+    <div class="side-grupa">Nabavka</div>
+    <a class="side-link {{ 'on' if ep == 'nabavka.za_naruciti' }}" href="{{ url_for('nabavka.za_naruciti') }}"><svg><use href="#i-cart"/></svg>Za naručiti{% if zn %}<span class="side-broj">{{ zn }}</span>{% endif %}</a>
+    <a class="side-link {{ 'on' if ep.startswith('nabavka.narudzbenic') }}" href="{{ url_for('nabavka.narudzbenice') }}"><svg><use href="#i-list"/></svg>Narudžbenice</a>
+    <a class="side-link {{ 'on' if ep.startswith('nabavka.prijem') }}" href="{{ url_for('nabavka.prijemi') }}"><svg><use href="#i-inbox"/></svg>Prijem robe</a>
+    <a class="side-link {{ 'on' if ep.startswith('nabavka.dobavljac') }}" href="{{ url_for('nabavka.dobavljaci') }}"><svg><use href="#i-truck"/></svg>Dobavljači</a>
+    <div class="side-grupa">Katalog i sajt</div>
+    <a class="side-link {{ 'on' if ep.startswith('admin_artik') or ep == 'nabavka.kartica' }}" href="{{ url_for('admin_artikli') }}"><svg><use href="#i-box"/></svg>Artikli</a>
+    {% if korisnik.uloga == 'admin' %}
+    <a class="side-link {{ 'on' if ep.startswith('admin_kategorij') }}" href="{{ url_for('admin_kategorije') }}"><svg><use href="#i-tag"/></svg>Kategorije</a>
+    {% endif %}
+    <a class="side-link {{ 'on' if ep == 'admin_radno_vreme' }}" href="{{ url_for('admin_radno_vreme') }}"><svg><use href="#i-clock"/></svg>Radno vreme</a>
+    {% if korisnik.uloga == 'admin' %}
+    <div class="side-grupa">Sistem</div>
+    <a class="side-link {{ 'on' if ep.startswith('admin_korisni') }}" href="{{ url_for('admin_korisnici') }}"><svg><use href="#i-users"/></svg>Korisnici</a>
+    <a class="side-link {{ 'on' if ep == 'prodaja.podesavanja' }}" href="{{ url_for('prodaja.podesavanja') }}"><svg><use href="#i-cog"/></svg>Podešavanja kase</a>
+    {% endif %}
+    <div class="side-sep"></div>
+    <a class="side-link" href="{{ url_for('pocetna') }}" target="_blank"><svg><use href="#i-ext"/></svg>Pogledaj sajt</a>
+    <form method="post" action="{{ url_for('admin_logout') }}">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <button class="side-link" type="submit"><svg><use href="#i-logout"/></svg>Odjava</button>
+    </form>
+    </nav>
+    <div class="side-user">
+      <b>{{ korisnik.ime }}</b>
+      <span class="uloga">{{ korisnik.uloga }}</span>
+    </div>
+  </aside>
+
+  <main class="main">
+    {% for kat, poruka in get_flashed_messages(with_categories=true) %}
+      <div class="flash {{ kat }}" role="status">{{ poruka }}</div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script>
+  // Meni na telefonu
+  const md = document.getElementById("meni-dugme"), sn = document.getElementById("side-nav");
+  md.addEventListener("click", () => md.setAttribute("aria-expanded", sn.classList.toggle("open")));
+  // Potvrda pre brisanja
+  document.querySelectorAll("form[data-potvrda]").forEach(f =>
+    f.addEventListener("submit", e => { if (!confirm(f.dataset.potvrda)) e.preventDefault(); }));
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

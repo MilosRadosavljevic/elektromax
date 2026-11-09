@@ -1,0 +1,58 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Izmena kategorije' if postojeca else 'Nova kategorija' }}{% endblock %}
+{% macro greska(polje) %}{% if greske.get(polje) %}<span class="err-msg">{{ greske[polje] }}</span>{% endif %}{% endmacro %}
+{% block content %}
+<div class="head">
+  <div>
+    <h1>{{ 'Izmena kategorije' if postojeca else 'Nova kategorija' }}</h1>
+    <p><a href="{{ url_for('admin_kategorije') }}">← Nazad na kategorije</a></p>
+  </div>
+</div>
+<form method="post" novalidate>
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  <div class="form-grid">
+    <div class="card card-pad">
+      <div class="fields">
+        <div class="field full {{ 'err' if greske.naziv }}">
+          <label for="naziv">Naziv *</label>
+          <input type="text" id="naziv" name="naziv" value="{{ k.naziv or '' }}" autofocus>
+          {{ greska('naziv') }}
+        </div>
+        <div class="field {{ 'err' if greske.slug }}">
+          <label for="slug">URL oznaka</label>
+          <input type="text" id="slug" name="slug" value="{{ k.slug or '' }}" placeholder="pravi se iz naziva">
+          <span class="help">Deo adrese: /katalog?kategorija=<b>{{ k.slug or 'oznaka' }}</b></span>
+          {{ greska('slug') }}
+        </div>
+        <div class="field {{ 'err' if greske.redosled }}">
+          <label for="redosled">Redosled</label>
+          <input type="number" id="redosled" name="redosled" value="{{ k.redosled }}">
+          {{ greska('redosled') }}
+        </div>
+        <div class="field full">
+          <label for="opis">Opis</label>
+          <textarea id="opis" name="opis" style="min-height:80px">{{ k.opis or '' }}</textarea>
+          <span class="help">Prikazuje se na kartici kategorije na početnoj strani.</span>
+        </div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card card-pad">
+        <h2 style="font-size:20px;margin-bottom:10px">Ikonica</h2>
+        <div class="ikonice">
+          {% for kljuc, naziv in IKONICE.items() %}
+          <label><input type="radio" name="ikonica" value="{{ kljuc }}" {{ 'checked' if k.ikonica == kljuc }}><svg><use href="#i-{{ kljuc }}"/></svg>{{ naziv }}</label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="card card-pad">
+        <label class="check"><input type="checkbox" name="aktivna" value="1" {{ 'checked' if k.aktivna }}><span><b>Aktivna</b><span>Neaktivna kategorija i njeni artikli se ne vide na sajtu.</span></span></label>
+      </div>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-volt" type="submit">Sačuvaj</button>
+    <a class="btn btn-line" href="{{ url_for('admin_kategorije') }}">Otkaži</a>
+  </div>
+</form>
+{% endblock %}

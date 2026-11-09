@@ -1,0 +1,17 @@
+{% extends "admin/base.html" %}
+{% block title %}Prijem robe{% endblock %}
+{% block content %}
+<div class="head">
+  <div><h1>Prijem robe</h1><p>Svaki prijem povećava stanje artikala i ažurira nabavnu cenu.</p></div>
+  <a class="btn btn-volt" href="{{ url_for('nabavka.prijem_novi') }}"><svg><use href="#i-plus"/></svg>Novi prijem (bez narudžbenice)</a>
+</div>
+<div class="card"><div class="table-wrap"><table class="t siroka">
+  <thead><tr><th>Broj</th><th>Datum</th><th>Dobavljač</th><th>Dokument dobavljača</th><th>Narudžbenica</th><th class="num">Stavki</th><th class="num">Vrednost (nab.)</th></tr></thead>
+  <tbody>
+  {% for p in lista %}
+    <tr><td><a class="naziv" href="{{ url_for('nabavka.prijem', pid=p.id) }}">{{ p.broj }}</a></td><td>{{ p.vreme[:16] }}</td>
+      <td>{{ p.dobavljac or '—' }}</td><td>{{ p.dokument or '—' }}</td><td>{{ p.narudzbenica or '' }}</td>
+      <td class="num">{{ p.stavki }}</td><td class="num">{{ p.vrednost | din if p.vrednost else '—' }}</td></tr>
+  {% else %}<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">Još nema prijema.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

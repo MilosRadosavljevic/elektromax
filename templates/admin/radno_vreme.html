@@ -1,0 +1,48 @@
+{% extends "admin/base.html" %}
+{% block title %}Radno vreme{% endblock %}
+{% block content %}
+<div class="head">
+  <div>
+    <h1>Radno vreme</h1>
+    <p>Izmene se odmah vide na sajtu – u kontaktu, podnožju i oznaci „Otvoreno / Zatvoreno“.</p>
+  </div>
+</div>
+<form method="post" novalidate>
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  <div class="card">
+    <div class="rv-row rv-head"><span>Dan</span><span>Radi</span><span>Otvara</span><span>Zatvara</span><span>Napomena (opciono)</span></div>
+    {% for d in radno_vreme %}
+    <div class="rv-row {{ '' if d.radi else 'zatvoreno' }}" data-red>
+      <span class="dan">{{ d.naziv }}</span>
+      <label class="switch"><input type="checkbox" name="radi_{{ d.dan }}" value="1" {{ 'checked' if d.radi }} aria-label="{{ d.naziv }} – radi"><span class="lbl">{{ 'Radi' if d.radi else 'Ne radi' }}</span></label>
+      <div class="vreme"><input type="time" name="od_{{ d.dan }}" value="{{ d.od or '' }}" aria-label="{{ d.naziv }} – otvara"></div>
+      <div class="vreme"><input type="time" name="do_{{ d.dan }}" value="{{ d.do or '' }}" aria-label="{{ d.naziv }} – zatvara"></div>
+      <div class="nap"><input type="text" name="napomena_{{ d.dan }}" value="{{ d.napomena or '' }}" placeholder="npr. pauza 12–13h" aria-label="{{ d.naziv }} – napomena"></div>
+      {% if greske.get(d.dan) %}<span class="err-msg">{{ greske[d.dan] }}</span>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-volt" type="submit">Sačuvaj radno vreme</button>
+    <button class="btn btn-line" type="button" id="kopiraj">Kopiraj ponedeljak na radne dane</button>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll("[data-red]").forEach(red => {
+    const sw = red.querySelector(".switch input"), lbl = red.querySelector(".switch .lbl");
+    sw.addEventListener("change", () => {
+      red.classList.toggle("zatvoreno", !sw.checked);
+      lbl.textContent = sw.checked ? "Radi" : "Ne radi";
+    });
+  });
+  document.getElementById("kopiraj").addEventListener("click", () => {
+    const f = document.forms[0], od = f.od_1.value, dO = f.do_1.value, radi = f.radi_1.checked;
+    [2, 3, 4, 5].forEach(d => {
+      f["od_" + d].value = od; f["do_" + d].value = dO;
+      if (f["radi_" + d].checked !== radi) f["radi_" + d].click();
+    });
+  });
+</script>
+{% endblock %}

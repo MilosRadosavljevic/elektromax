@@ -1,0 +1,87 @@
+{% extends "admin/base.html" %}
+{% block title %}Novi prijem{% endblock %}
+{% block content %}
+<div class="head">
+  <div><h1>Prijem robe{% if nar %} po narudžbenici {{ nar.broj }}{% endif %}</h1>
+    <p><a href="{{ url_for('nabavka.prijemi') }}">← Svi prijemi</a>{% if nar %} · proverite stvarno primljene količine i cene sa fakture{% endif %}</p></div>
+</div>
+<datalist id="artikli-lista">
+  {% for a in artikli %}<option value="{{ a.sifra }} – {{ a.naziv }}" data-id="{{ a.id }}" data-cena="{{ a.nabavna_cena | broj }}"></option>{% endfor %}
+</datalist>
+<form method="post" id="prijem">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  {% if nar %}<input type="hidden" name="narudzbenica" value="{{ nar.id }}">{% endif %}
+  <div class="card card-pad" style="margin-bottom:16px">
+    <div class="fields f3">
+      <div class="field"><label for="dobavljac_id">Dobavljač</label>
+        <select id="dobavljac_id" name="dobavljac_id" {{ 'disabled' if nar }}>
+          <option value="">— bez dobavljača —</option>
+          {% for d in dobavljaci %}<option value="{{ d.id }}" {{ 'selected' if nar and nar.dobavljac_id == d.id }}>{{ d.naziv }}</option>{% endfor %}
+        </select></div>
+      <div class="field"><label for="dokument">Broj fakture / otpremnice</label><input type="text" id="dokument" name="dokument" placeholder="npr. 2026-1543"></div>
+      <div class="field"><label for="napomena">Napomena</label><input type="text" id="napomena" name="napomena"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="table-wrap"><table class="t siroka" id="stavke">
+      <thead><tr><th>Artikal</th><th style="width:140px" class="num">Količina</th><th style="width:190px" class="num">Nabavna cena bez PDV</th><th class="num" style="width:140px">Iznos</th><th style="width:50px"></th></tr></thead>
+      <tbody>
+      {% for s in stavke_nar or [] %}
+        <tr><td><input type="text" class="art" list="artikli-lista" value="{{ s.sifra }} – {{ s.naziv }}" required><input type="hidden" name="artikal_id" value="{{ s.artikal_id }}"></td>
+          <td class="num"><input type="number" name="kolicina" min="0" step="1" value="{{ s.kolicina }}" class="kol-unos"></td>
+          <td class="num"><input type="number" name="nabavna_cena" min="0" step="0.01" value="{{ s.nabavna_cena | broj }}" class="kol-unos" style="width:130px"></td>
+          <td class="num iznos"></td><td><button type="button" class="icon-btn danger ukloni" aria-label="Ukloni"><svg><use href="#i-trash"/></svg></button></td></tr>
+      {% endfor %}
+      </tbody>
+      <tfoot><tr><td colspan="3" class="num"><b>Ukupno nabavna vrednost (bez PDV):</b></td><td class="num"><b id="ukupno">0</b></td><td></td></tr></tfoot>
+    </table></div>
+    <div class="card-pad" style="padding-top:12px"><button type="button" class="btn btn-line" id="dodaj"><svg><use href="#i-plus"/></svg>Dodaj stavku</button></div>
+  </div>
+  <template id="sablon-reda">
+    <tr><td><input type="text" class="art" list="artikli-lista" placeholder="Počnite da kucate šifru ili naziv…" required><input type="hidden" name="artikal_id"></td>
+      <td class="num"><input type="number" name="kolicina" min="0" step="1" value="1" class="kol-unos"></td>
+      <td class="num"><input type="number" name="nabavna_cena" min="0" step="0.01" class="kol-unos" style="width:130px"></td>
+      <td class="num iznos"></td><td><button type="button" class="icon-btn danger ukloni" aria-label="Ukloni"><svg><use href="#i-trash"/></svg></button></td></tr>
+  </template>
+  <div class="form-actions">
+    <button class="btn btn-volt" type="submit">Proknjiži prijem (uvećaj stanje)</button>
+    <a class="btn btn-line" href="{{ url_for('nabavka.prijemi') }}">Otkaži</a>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  const tb = document.querySelector("#stavke tbody");
+  const opcije = Array.from(document.querySelectorAll("#artikli-lista option"));
+  const din = x => x.toLocaleString("sr-RS", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  function red() {
+    tb.appendChild(document.getElementById("sablon-reda").content.cloneNode(true));
+    tb.lastElementChild.querySelector(".art").focus();
+  }
+  function racunaj() {
+    let uk = 0;
+    tb.querySelectorAll("tr").forEach(tr => {
+      const k = +tr.querySelector("[name=kolicina]").value || 0, c = +tr.querySelector("[name=nabavna_cena]").value || 0;
+      tr.querySelector(".iznos").textContent = din(k * c);
+      uk += k * c;
+    });
+    document.getElementById("ukupno").textContent = din(uk);
+  }
+  tb.addEventListener("input", e => {
+    if (e.target.classList.contains("art")) {
+      const o = opcije.find(x => x.value === e.target.value), tr = e.target.closest("tr");
+      tr.querySelector("[name=artikal_id]").value = o ? o.dataset.id : "";
+      if (o && !tr.querySelector("[name=nabavna_cena]").value) tr.querySelector("[name=nabavna_cena]").value = o.dataset.cena;
+      e.target.setCustomValidity(o ? "" : "Izaberite artikal sa liste");
+    }
+    racunaj();
+  });
+  tb.addEventListener("click", e => {
+    const b = e.target.closest(".ukloni");
+    if (b) { b.closest("tr").remove(); racunaj(); }
+  });
+  document.getElementById("dodaj").addEventListener("click", red);
+  if (!tb.children.length) red();
+  racunaj();
+</script>
+{% endblock %}

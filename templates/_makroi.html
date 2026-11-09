@@ -1,0 +1,30 @@
+{% macro kartica(a, ikonica='box') %}
+<a class="art reveal" href="{{ url_for('artikal', id=a.id) }}">
+  <div class="art-img">
+    {% if a.slika %}<img src="{{ url_for('static', filename='uploads/' ~ a.slika) }}" alt="{{ a.naziv }}" loading="lazy">
+    {% else %}<svg><use href="#i-{{ a.ikonica or ikonica }}"/></svg>{% endif %}
+    {% if a.akcijska_cena is not none %}<span class="badge badge-akcija">Akcija</span>{% endif %}
+  </div>
+  <div class="art-body">
+    <span class="art-kat">{{ a.kategorija }}</span>
+    <h3>{{ a.naziv }}</h3>
+    <div class="art-foot">
+      {{ cena(a) }}
+      {{ lager(a) }}
+    </div>
+  </div>
+</a>
+{% endmacro %}
+
+{% macro cena(a) %}
+<div class="cena{{ ' akc' if a.akcijska_cena is not none }}">
+  {% if a.akcijska_cena is not none %}<span class="cena-stara">{{ a.cena | din }}</span>{{ a.akcijska_cena | din }}
+  {% else %}{{ a.cena | din }}{% endif %}
+  <small>/ {{ a.jedinica_mere }}</small>
+</div>
+{% endmacro %}
+
+{% macro lager(a) %}
+{% if a.stanje > 0 %}<span class="lager ima">Na stanju</span>
+{% else %}<span class="lager nema">Po porudžbini</span>{% endif %}
+{% endmacro %}

@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% from "_makroi.html" import kartica %}
+
+{% block head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HardwareStore",
+  "name": "Elektromax",
+  "telephone": "+381654887788",
+  "address": {"@type": "PostalAddress", "streetAddress": "Šulejićeva 24", "addressLocality": "Smederevska Palanka", "postalCode": "11420", "addressCountry": "RS"},
+  "geo": {"@type": "GeoCoordinates", "latitude": 44.3681561, "longitude": 20.9621317},
+  "aggregateRating": {"@type": "AggregateRating", "ratingValue": "4.8", "bestRating": "5"}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="hero" style="padding:0">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Elektro oprema · Smederevska Palanka</span>
+      <h1>Sve za struju<br><em>na jednom mestu</em></h1>
+      <p class="lead">Kablovi, prekidači, utičnice, osigurači, rasveta i alat – za majstore, firme i sve koji sami sređuju instalacije kod kuće.</p>
+      <form class="hero-search" action="{{ url_for('katalog') }}" role="search">
+        <input name="q" placeholder="Pretražite artikle, npr. „kabl 3x2,5“" aria-label="Pretraga artikala">
+        <button class="btn btn-volt" type="submit"><svg><use href="#i-search"/></svg>Traži</button>
+      </form>
+      <div class="hero-cta">
+        <a class="btn btn-volt" href="tel:+381654887788"><svg><use href="#i-phone"/></svg>Pozovite 065 488 77 88</a>
+        <a class="btn btn-ghost" href="{{ url_for('katalog') }}"><svg><use href="#i-box"/></svg>Pogledajte katalog</a>
+      </div>
+      <div class="hero-meta">
+        <div><svg><use href="#i-pin"/></svg><span><strong>Šulejićeva 24</strong>, Sm. Palanka</span></div>
+        <div>
+          <span class="stars" aria-hidden="true">{% for _ in range(5) %}<svg><use href="#i-star"/></svg>{% endfor %}</span>
+          <span><strong>4,8</strong> na Google-u</span>
+        </div>
+      </div>
+    </div>
+
+    <aside class="hero-card reveal" aria-label="Brze informacije">
+      <span class="status" id="status"><span class="dot"></span><span id="status-text">Radno vreme</span></span>
+      <h3>Elektromax</h3>
+      <div class="addr">Šulejićeva 24, 11420 Smederevska Palanka</div>
+      <div class="bolt-art" aria-hidden="true">
+        <span class="ring" style="width:150px;height:150px"></span>
+        <span class="ring" style="width:240px;height:240px"></span>
+        <span class="ring" style="width:330px;height:330px"></span>
+        <svg class="big"><use href="#i-bolt"/></svg>
+      </div>
+      <div class="quick">
+        <a href="tel:+381654887788"><svg><use href="#i-phone"/></svg>Pozovi</a>
+        <a href="https://www.google.com/maps/dir/?api=1&destination=44.3681561,20.9621317" target="_blank" rel="noopener"><svg><use href="#i-nav"/></svg>Putanja</a>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<div class="strip">
+  <div class="wrap">
+    <div><svg><use href="#i-check"/></svg>Instalacioni materijal na lageru</div>
+    <div><svg><use href="#i-check"/></svg>Stručan savet pri kupovini</div>
+    <div><svg><use href="#i-check"/></svg>Nabavka po porudžbini</div>
+    <div><svg><use href="#i-check"/></svg>Za majstore i fizička lica</div>
+  </div>
+</div>
+
+<section id="asortiman">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="eyebrow">Asortiman</span>
+        <h2>Kategorije proizvoda</h2>
+      </div>
+      <p>Izaberite kategoriju i pogledajte artikle sa cenama. Ako nešto ne nađete – pozovite, nabavićemo.</p>
+    </div>
+    <div class="cats">
+      {% for k in kategorije %}
+      <a class="cat reveal" href="{{ url_for('katalog', kategorija=k.slug) }}">
+        <div class="cat-ico"><svg><use href="#i-{{ k.ikonica }}"/></svg></div>
+        <h3>{{ k.naziv }}</h3>
+        <p>{{ k.opis }}</p>
+        <span class="more">{{ k.broj }} artikala <svg><use href="#i-arrow"/></svg></span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if istaknuti %}
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="eyebrow">Izdvajamo</span>
+        <h2>Iz ponude</h2>
+      </div>
+      <a class="btn btn-dark" href="{{ url_for('katalog') }}">Ceo katalog <svg><use href="#i-arrow"/></svg></a>
+    </div>
+    <div class="grid-art">
+      {% for a in istaknuti %}{{ kartica(a) }}{% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="why" id="zasto-mi">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="eyebrow">Zašto Elektromax</span>
+        <h2>Lokalna radnja, ozbiljan pristup</h2>
+      </div>
+      <p>Kupci nas ocenjuju sa 4,8 od 5 na Google-u – i trudimo se da tako i ostane.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-item reveal"><div class="num">01</div><h3>Savet bez žurbe</h3><p>Recite nam šta radite, pomoći ćemo vam da izaberete pravi materijal – bez kupovine viška i bez vraćanja po ono što fali.</p></div>
+      <div class="why-item reveal"><div class="num">02</div><h3>Sve na jednom mestu</h3><p>Od jednog osigurača do kompletnog materijala za instalaciju kuće. Uštedite vreme i obilaske više prodavnica.</p></div>
+      <div class="why-item reveal"><div class="num">03</div><h3>Blizu vas</h3><p>Nalazimo se u Šulejićevoj 24 u Smederevskoj Palanci. Otvaramo rano, da majstori stignu pre posla.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="contact" id="kontakt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="eyebrow">Kontakt</span>
+        <h2>Posetite nas ili pozovite</h2>
+      </div>
+      <p>Proverite da li imamo ono što vam treba pre nego što krenete – jedan poziv štedi vreme.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="panel">
+        <div class="info-row">
+          <span class="ic"><svg><use href="#i-phone"/></svg></span>
+          <div><small>Telefon</small><a href="tel:+381654887788">065 488 77 88</a></div>
+        </div>
+        <div class="info-row">
+          <span class="ic"><svg><use href="#i-pin"/></svg></span>
+          <div><small>Adresa</small><b>Šulejićeva 24</b><div style="color:var(--muted);font-size:14.5px">11420 Smederevska Palanka</div></div>
+        </div>
+        <div class="info-row">
+          <span class="ic"><svg><use href="#i-clock"/></svg></span>
+          <div style="flex:1"><small>Radno vreme</small>
+            <table class="hours" aria-label="Radno vreme">
+              {% for d in rv %}
+              <tr data-dan="{{ d.dan }}">
+                <td>{{ d.naziv }}</td>
+                <td>{{ (d.od ~ ' – ' ~ d.do) if d.radi else 'Zatvoreno' }}
+                  {% if d.napomena %}<span class="nap">{{ d.napomena }}</span>{% endif %}</td>
+              </tr>
+              {% endfor %}
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="map">
+        <iframe title="Mapa – Elektromax, Šulejićeva 24" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          src="https://maps.google.com/maps?q=44.3681561,20.9621317&z=17&hl=sr&output=embed"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

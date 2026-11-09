@@ -1,0 +1,18 @@
+[Unit]
+Description=Elektromax (sajt, admin, API kase)
+After=network.target
+
+[Service]
+User=elektromax
+Group=elektromax
+WorkingDirectory=/home/elektromax/app
+EnvironmentFile=/home/elektromax/elektromax.env
+ExecStart=/home/elektromax/app/.venv/bin/gunicorn --workers 2 --bind 127.0.0.1:8000 --access-logfile - --error-logfile - app:app
+Restart=always
+RestartSec=3
+# zaštita
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

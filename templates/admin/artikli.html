@@ -1,0 +1,76 @@
+{% extends "admin/base.html" %}
+{% block title %}Artikli{% endblock %}
+{% block content %}
+<div class="head">
+  <div>
+    <h1>Artikli</h1>
+    <p>{{ artikli | length }} prikazano. Sakriveni artikli se ne vide na sajtu.</p>
+  </div>
+  <a class="btn btn-volt" href="{{ url_for('admin_artikal', kategorija=kat or None) }}"><svg><use href="#i-plus"/></svg>Novi artikal</a>
+</div>
+
+<div class="card">
+  <form class="filters" id="filteri">
+    <input name="q" value="{{ q }}" placeholder="Pretraga po nazivu, šifri, proizvođaču…" aria-label="Pretraga">
+    <select name="kategorija" aria-label="Kategorija" onchange="this.form.submit()">
+      <option value="">Sve kategorije</option>
+      {% for k in kategorije %}<option value="{{ k.id }}" {{ 'selected' if kat == k.id|string }}>{{ k.naziv }}</option>{% endfor %}
+    </select>
+    <select name="status" aria-label="Status" onchange="this.form.submit()">
+      {% for v, l in [('', 'Svi statusi'), ('aktivni', 'Vidljivi na sajtu'), ('sakriveni', 'Sakriveni'), ('nema', 'Nema na stanju'), ('akcija', 'Na akciji')] %}
+      <option value="{{ v }}" {{ 'selected' if status == v }}>{{ l }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-dark" type="submit">Traži</button>
+    {% if q or kat or status %}<a class="btn btn-line" href="{{ url_for('admin_artikli') }}">Poništi</a>{% endif %}
+  </form>
+
+  <div class="table-wrap">
+    <table class="t siroka">
+      <thead><tr>
+        <th>Artikal</th><th class="hide-sm">Kategorija</th><th class="num">Cena</th>
+        <th class="num">Stanje</th><th>Status</th><th></th>
+      </tr></thead>
+      <tbody>
+      {% for a in artikli %}
+        <tr class="{{ 'off' if not a.aktivan }}">
+          <td>
+            <div class="cell-art">
+              <div class="thumb">{% if a.slika %}<img src="{{ url_for('static', filename='uploads/' ~ a.slika) }}" alt="">{% else %}<svg><use href="#i-box"/></svg>{% endif %}</div>
+              <div><a class="naziv" href="{{ url_for('admin_artikal', id=a.id) }}">{{ a.naziv }}</a><small>{{ a.sifra }}{{ ' · ' ~ a.proizvodjac if a.proizvodjac }}</small></div>
+            </div>
+          </td>
+          <td class="hide-sm">{{ a.kategorija }}</td>
+          <td class="num">
+            {% if a.akcijska_cena is not none %}<span class="old">{{ a.cena | din }}</span><b style="color:#c2410c">{{ a.akcijska_cena | din }}</b>
+            {% else %}{{ a.cena | din }}{% endif %}
+            <small>/ {{ a.jedinica_mere }}</small>
+          </td>
+          <td class="num">{% if a.stanje <= 0 %}<span class="pill bad">{{ a.stanje }}</span>{% elif a.stanje <= a.min_kolicina %}<span class="pill volt" title="Ispod minimalne količine ({{ a.min_kolicina }})">{{ a.stanje }}</span>{% else %}{{ a.stanje }}{% endif %}</td>
+          <td>
+            {% if a.aktivan %}<span class="pill ok">Vidljiv</span>{% else %}<span class="pill off">Sakriven</span>{% endif %}
+            {% if a.istaknut %}<span class="pill volt">Istaknut</span>{% endif %}
+          </td>
+          <td>
+            <div class="akcije">
+              <form method="post" action="{{ url_for('admin_artikal_vidljivost', id=a.id) }}">
+                <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+                <button class="icon-btn" type="submit" title="{{ 'Sakrij sa sajta' if a.aktivan else 'Prikaži na sajtu' }}" aria-label="{{ 'Sakrij sa sajta' if a.aktivan else 'Prikaži na sajtu' }}"><svg><use href="#i-{{ 'eye-off' if a.aktivan else 'eye' }}"/></svg></button>
+              </form>
+              <a class="icon-btn" href="{{ url_for('nabavka.kartica', aid=a.id) }}" title="Kartica artikla (kretanje zaliha)" aria-label="Kartica artikla"><svg><use href="#i-list"/></svg></a>
+              <a class="icon-btn" href="{{ url_for('admin_artikal', id=a.id) }}" title="Izmeni" aria-label="Izmeni"><svg><use href="#i-edit"/></svg></a>
+              <form method="post" action="{{ url_for('admin_artikal_obrisi', id=a.id) }}" data-potvrda="Obrisati artikal „{{ a.naziv }}“? Ovo se ne može poništiti.">
+                <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+                <button class="icon-btn danger" type="submit" title="Obriši" aria-label="Obriši"><svg><use href="#i-trash"/></svg></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">Nema artikala za izabrane filtere.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

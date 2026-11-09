@@ -1,0 +1,27 @@
+{% extends "admin/base.html" %}
+{% block title %}Podešavanja kase{% endblock %}
+{% block content %}
+<div class="head"><div><h1>Podešavanja kase</h1><p>Pravila koja kasa primenjuje pri izdavanju računa.</p></div></div>
+<div class="grid2">
+  <form class="card card-pad" method="post">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <div class="stack">
+      <div class="field"><label for="max_popust_radnik">Najveći popust koji radnik daje bez odobrenja (%)</label>
+        <input type="number" min="0" max="100" step="0.5" id="max_popust_radnik" name="max_popust_radnik" value="{{ max_popust }}">
+        <span class="help">Za veći popust kasa traži prijavu administratora. Administrator nema ograničenje.</span></div>
+      <div class="field"><label for="predracun_dana">Rok važenja predračuna (dana)</label>
+        <input type="number" min="1" max="90" id="predracun_dana" name="predracun_dana" value="{{ predracun_dana }}"></div>
+      <button class="btn btn-volt" type="submit">Sačuvaj</button>
+    </div>
+  </form>
+  <div class="card card-pad">
+    <h2>Podaci o firmi na računima</h2>
+    <p><b>{{ firma.naziv }}</b><br>{{ firma.adresa }}, {{ firma.mesto }}<br>PIB {{ firma.pib }} · MB {{ firma.mb }}<br>
+      Tekući račun: {{ firma.tekuci_racun }}<br>{{ firma.telefon }} · {{ firma.email }}</p>
+    <p class="meta">Menjaju se u fajlu <code>firma.py</code>.</p>
+    <h2 style="margin-top:20px">Fiskalizacija</h2>
+    <p>Režim: <span class="pill volt">DEMO – nije fiskalna kasa</span></p>
+    <p class="meta">Plan povezivanja sa odobrenim ESIR-om / L-PFR-om: <code>FISKALIZACIJA.md</code>.</p>
+  </div>
+</div>
+{% endblock %}

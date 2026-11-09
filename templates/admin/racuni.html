@@ -1,0 +1,36 @@
+{% extends "admin/base.html" %}
+{% block title %}Računi{% endblock %}
+{% set TIP = {'racun': ('Račun', 'ok'), 'predracun': ('Predračun', 'off'), 'storno': ('Storno', 'bad')} %}
+{% set STATUS = {'izdat': 'Izdat', 'storniran': 'Storniran', 'delimicno_storniran': 'Delimično storniran', 'realizovan': 'Realizovan', 'ponisten': 'Poništen'} %}
+{% block content %}
+<div class="head">
+  <div><h1>Računi</h1><p>Računi, predračuni i storna izdati na kasi. Promet u prikazanom periodu (računi − storna): <b>{{ zbir | din }}</b></p></div>
+</div>
+<div class="card">
+  <form class="filters">
+    <input type="date" name="od" value="{{ od }}" aria-label="Od" style="flex:0 0 auto;min-width:0">
+    <input type="date" name="do" value="{{ do }}" aria-label="Do" style="flex:0 0 auto;min-width:0">
+    <select name="tip" aria-label="Tip">
+      <option value="">Svi dokumenti</option>
+      {% for k, v in TIP.items() %}<option value="{{ k }}" {{ 'selected' if tip == k }}>{{ v[0] }}</option>{% endfor %}
+    </select>
+    <input name="q" value="{{ q }}" placeholder="Broj računa ili kupac…">
+    <button class="btn btn-dark" type="submit">Prikaži</button>
+  </form>
+  <div class="table-wrap"><table class="t siroka">
+    <thead><tr><th>Broj</th><th>Tip</th><th>Vreme</th><th class="hide-sm">Kupac</th><th class="num">Popust</th><th class="num">Iznos</th><th>Status</th><th class="hide-sm">Kasir</th></tr></thead>
+    <tbody>
+    {% for r in lista %}
+      <tr><td><a class="naziv" href="{{ url_for('prodaja.racun', rid=r.id) }}">{{ r.broj }}</a></td>
+        <td><span class="pill {{ TIP[r.tip][1] }}">{{ TIP[r.tip][0] }}</span></td>
+        <td style="white-space:nowrap">{{ r.vreme[8:10] }}.{{ r.vreme[5:7] }}. {{ r.vreme[11:16] }}</td>
+        <td class="hide-sm">{{ r.kupac or '' }}</td>
+        <td class="num">{{ r.popust | din if r.popust else '' }}</td>
+        <td class="num"><b>{{ '−' if r.tip == 'storno' }}{{ r.ukupno | din }}</b></td>
+        <td>{{ STATUS[r.status] }}</td><td class="hide-sm">{{ r.kasir }}</td></tr>
+    {% else %}
+      <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">Nema dokumenata u izabranom periodu.</td></tr>
+    {% endfor %}
+    </tbody></table></div>
+</div>
+{% endblock %}

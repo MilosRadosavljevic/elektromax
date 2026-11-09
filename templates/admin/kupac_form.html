@@ -1,0 +1,25 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Izmena kupca' if post else 'Novi kupac' }}{% endblock %}
+{% macro greska(p) %}{% if greske.get(p) %}<span class="err-msg">{{ greske[p] }}</span>{% endif %}{% endmacro %}
+{% block content %}
+<div class="head"><div><h1>{{ 'Izmena kupca' if post else 'Novi kupac' }}</h1><p><a href="{{ url_for('prodaja.kupci') }}">← Kupci</a></p></div></div>
+<div class="grid2">
+  <form method="post" novalidate>
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <div class="card card-pad"><div class="fields">
+      {% for p, l in [('naziv', 'Naziv firme *'), ('pib', 'PIB'), ('mb', 'Matični broj'), ('adresa', 'Adresa'), ('mesto', 'Poštanski broj i mesto'), ('telefon', 'Telefon'), ('email', 'E-mail')] %}
+      <div class="field {{ 'full' if p == 'naziv' }} {{ 'err' if greske.get(p) }}"><label for="{{ p }}">{{ l }}</label>
+        <input type="text" id="{{ p }}" name="{{ p }}" value="{{ k.get(p) or '' }}">{{ greska(p) }}</div>
+      {% endfor %}
+      <div class="field full"><label for="napomena">Napomena</label><textarea id="napomena" name="napomena" style="min-height:70px">{{ k.get('napomena') or '' }}</textarea></div>
+    </div></div>
+    <div class="form-actions"><button class="btn btn-volt" type="submit">Sačuvaj</button><a class="btn btn-line" href="{{ url_for('prodaja.kupci') }}">Otkaži</a></div>
+  </form>
+  {% if post %}
+  <div class="card"><div class="card-pad" style="padding-bottom:0"><h2>Poslednji dokumenti</h2></div>
+    <div class="table-wrap"><table class="t">
+      <tbody>{% for r in racuni %}<tr><td><a class="naziv" href="{{ url_for('prodaja.racun', rid=r.id) }}">{{ r.broj }}</a></td><td>{{ r.vreme[:10] }}</td><td class="num">{{ '−' if r.tip == 'storno' }}{{ r.ukupno | din }}</td></tr>
+      {% else %}<tr><td style="color:var(--muted)">Još nema dokumenata.</td></tr>{% endfor %}</tbody></table></div></div>
+  {% endif %}
+</div>
+{% endblock %}

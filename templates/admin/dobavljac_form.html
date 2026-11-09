@@ -1,0 +1,21 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Izmena dobavljača' if post else 'Novi dobavljač' }}{% endblock %}
+{% macro greska(p) %}{% if greske.get(p) %}<span class="err-msg">{{ greske[p] }}</span>{% endif %}{% endmacro %}
+{% block content %}
+<div class="head"><div><h1>{{ 'Izmena dobavljača' if post else 'Novi dobavljač' }}</h1><p><a href="{{ url_for('nabavka.dobavljaci') }}">← Dobavljači</a></p></div></div>
+<form method="post" novalidate style="max-width:760px">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  <div class="card card-pad"><div class="fields">
+    {% for p, l in [('naziv', 'Naziv *'), ('pib', 'PIB'), ('adresa', 'Adresa'), ('kontakt', 'Kontakt osoba'), ('telefon', 'Telefon'), ('email', 'E-mail')] %}
+    <div class="field {{ 'full' if p == 'naziv' }} {{ 'err' if greske.get(p) }}"><label for="{{ p }}">{{ l }}</label>
+      <input type="text" id="{{ p }}" name="{{ p }}" value="{{ d.get(p) or '' }}">{{ greska(p) }}</div>
+    {% endfor %}
+    <div class="field {{ 'err' if greske.rok_isporuke }}"><label for="rok_isporuke">Rok isporuke (dana)</label>
+      <input type="number" min="0" id="rok_isporuke" name="rok_isporuke" value="{{ d.rok_isporuke }}">
+      <span class="help">Koristi se u predlogu: naručuje se tako da roba stigne pre nego što nestane.</span>{{ greska('rok_isporuke') }}</div>
+    <div class="field" style="align-self:end"><label class="check"><input type="checkbox" name="aktivan" value="1" {{ 'checked' if d.aktivan }}><span><b>Aktivan</b></span></label></div>
+    <div class="field full"><label for="napomena">Napomena</label><textarea id="napomena" name="napomena" style="min-height:70px">{{ d.napomena or '' }}</textarea></div>
+  </div></div>
+  <div class="form-actions"><button class="btn btn-volt" type="submit">Sačuvaj</button><a class="btn btn-line" href="{{ url_for('nabavka.dobavljaci') }}">Otkaži</a></div>
+</form>
+{% endblock %}

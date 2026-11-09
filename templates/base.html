@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="sr-Latn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Elektromax – elektro oprema | Smederevska Palanka{% endblock %}</title>
+<meta name="description" content="{% block description %}Elektromax – prodavnica elektro opreme i instalacionog materijala u Smederevskoj Palanci, Šulejićeva 24. Pozovite 065 488 77 88.{% endblock %}">
+<meta name="theme-color" content="#14171c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2314171c'/%3E%3Cpath d='M36 6 14 36h14l-4 22 22-30H32z' fill='%23ffc21a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
+{% block head %}{% endblock %}
+</head>
+<body>
+{% include "_ikonice.html" %}
+{% set rv = RV() %}
+{% set strana = request.endpoint %}
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="{{ url_for('pocetna') }}" aria-label="Elektromax – početna">
+      <span class="logo-mark"><svg><use href="#i-bolt"/></svg></span>
+      <span class="logo-text">Elektro<span>max</span></span>
+    </a>
+    <nav class="nav" id="nav">
+      <a href="{{ url_for('katalog') }}" class="{{ 'on' if strana in ('katalog', 'artikal') }}">Katalog</a>
+      <a href="{{ url_for('pocetna') }}#asortiman">Kategorije</a>
+      <a href="{{ url_for('pocetna') }}#zasto-mi">Zašto mi</a>
+      <a href="{{ url_for('pocetna') }}#kontakt">Kontakt</a>
+    </nav>
+    <a class="top-call" href="tel:+381654887788"><svg><use href="#i-phone"/></svg>065 488 77 88</a>
+    <button class="burger" id="burger" aria-label="Otvori meni" aria-expanded="false" aria-controls="nav"><svg><use href="#i-menu"/></svg></button>
+  </div>
+</header>
+
+<main>{% block content %}{% endblock %}</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="logo" href="{{ url_for('pocetna') }}" style="margin-bottom:14px">
+          <span class="logo-mark"><svg><use href="#i-bolt"/></svg></span>
+          <span class="logo-text">Elektro<span>max</span></span>
+        </a>
+        <p style="max-width:300px">Prodavnica elektro opreme i instalacionog materijala u Smederevskoj Palanci.</p>
+      </div>
+      <div>
+        <h4>Kontakt</h4>
+        <ul>
+          <li><a href="tel:+381654887788">{{ FIRMA.telefon }}</a></li>
+          <li><a href="mailto:{{ FIRMA.email }}">{{ FIRMA.email }}</a></li>
+          <li>{{ FIRMA.adresa }}</li>
+          <li>{{ FIRMA.mesto }}</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Radno vreme</h4>
+        <table class="foot-hours">
+          {% for d in rv %}
+          <tr data-dan="{{ d.dan }}"><td>{{ d.naziv[:3] }}</td><td>{{ (d.od ~ '–' ~ d.do) if d.radi else 'zatvoreno' }}</td></tr>
+          {% endfor %}
+        </table>
+      </div>
+      <div>
+        <h4>Brzi linkovi</h4>
+        <ul>
+          <li><a href="{{ url_for('katalog') }}">Katalog artikala</a></li>
+          <li><a href="{{ url_for('pocetna') }}#kontakt">Mapa i kontakt</a></li>
+          <li><a href="https://www.google.com/maps/dir/?api=1&destination=44.3681561,20.9621317" target="_blank" rel="noopener">Putanja do radnje</a></li>
+          <li><a href="{{ url_for('izvori_slika') }}">Izvori fotografija</a></li>
+          <li><a href="{{ url_for('admin_pocetna') }}">Prijava za radnike</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© {{ 2026 }} {{ FIRMA.naziv }} · PIB {{ FIRMA.pib }} · MB {{ FIRMA.mb }}</span>
+      <span>{{ FIRMA.adresa }}, {{ FIRMA.mesto }} · Cene su informativne.</span>
+    </div>
+  </div>
+</footer>
+
+<div class="callbar">
+  <a class="btn btn-volt" href="tel:+381654887788"><svg><use href="#i-phone"/></svg>Pozovi</a>
+  <a class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&destination=44.3681561,20.9621317" target="_blank" rel="noopener"><svg><use href="#i-nav"/></svg>Putanja</a>
+</div>
+
+<script>window.RV = {{ rv | tojson }};</script>
+<script src="{{ url_for('static', filename='js/site.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

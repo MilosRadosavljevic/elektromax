@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_makroi.html" import kartica %}
+{% block title %}{{ trenutna.naziv ~ ' – ' if trenutna }}Katalog | Elektromax{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="wrap">
+    <div class="crumbs"><a href="{{ url_for('pocetna') }}">Početna</a> / <a href="{{ url_for('katalog') }}">Katalog</a>{% if trenutna %} / {{ trenutna.naziv }}{% endif %}</div>
+    <h1>{{ trenutna.naziv if trenutna else 'Katalog artikala' }}</h1>
+    <p>{{ trenutna.opis if trenutna else 'Kompletna ponuda Elektromax-a. Cene su sa PDV-om.' }}</p>
+  </div>
+</div>
+
+<div class="wrap katalog">
+  <aside class="side">
+    <h4>Kategorije</h4>
+    <ul class="side-list">
+      <li><a href="{{ url_for('katalog', q=q or None) }}" class="{{ 'on' if not trenutna }}"><span class="lbl"><svg><use href="#i-box"/></svg>Sve kategorije</span></a></li>
+      {% for k in kategorije %}
+      <li><a href="{{ url_for('katalog', kategorija=k.slug, q=q or None) }}" class="{{ 'on' if trenutna and trenutna.id == k.id }}"><span class="lbl"><svg><use href="#i-{{ k.ikonica }}"/></svg>{{ k.naziv }}</span></a></li>
+      {% endfor %}
+    </ul>
+  </aside>
+
+  <div>
+    <nav class="kat-chips" aria-label="Kategorije">
+      <a href="{{ url_for('katalog', q=q or None) }}" class="{{ 'on' if not trenutna }}">Sve</a>
+      {% for k in kategorije %}
+      <a href="{{ url_for('katalog', kategorija=k.slug, q=q or None) }}" class="{{ 'on' if trenutna and trenutna.id == k.id }}">{{ k.naziv }}</a>
+      {% endfor %}
+    </nav>
+    <div class="toolbar">
+      <form class="search" role="search">
+        {% if trenutna %}<input type="hidden" name="kategorija" value="{{ trenutna.slug }}">{% endif %}
+        <svg><use href="#i-search"/></svg>
+        <input name="q" value="{{ q }}" placeholder="Pretraga po nazivu ili šifri" aria-label="Pretraga">
+      </form>
+      <span class="count">{{ artikli | length }} {{ 'artikal' if artikli | length % 10 == 1 and artikli | length % 100 != 11 else 'artikala' }}</span>
+    </div>
+
+    {% if artikli %}
+    <div class="grid-art auto">
+      {% for a in artikli %}{{ kartica(a) }}{% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+      <p><b>Nema artikala za ovu pretragu.</b></p>
+      <p style="margin:6px 0 18px">Pozovite nas – možda imamo ili možemo da nabavimo.</p>
+      <a class="btn btn-volt" href="tel:+381654887788"><svg><use href="#i-phone"/></svg>065 488 77 88</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

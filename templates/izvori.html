@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Izvori fotografija | Elektromax{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="wrap">
+    <div class="crumbs"><a href="{{ url_for('pocetna') }}">Početna</a> / Izvori fotografija</div>
+    <h1>Izvori fotografija</h1>
+    <p>Fotografije artikala su ilustracije pod slobodnim licencama. Hvala autorima.</p>
+  </div>
+</div>
+<div class="wrap" style="padding:40px 24px 90px">
+  {% if artikli %}
+  <table class="hours" style="max-width:900px">
+    {% for a in artikli %}
+    <tr>
+      <td style="padding:10px 16px 10px 0"><a href="{{ url_for('artikal', id=a.id) }}">{{ a.naziv }}</a></td>
+      <td style="padding:10px 0;font-weight:500;text-align:left">
+        {% if a.slika_izvor %}<a href="{{ a.slika_izvor }}" target="_blank" rel="noopener nofollow">{{ a.slika_kredit }}</a>{% else %}{{ a.slika_kredit }}{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p style="color:var(--muted)">Trenutno nema fotografija preuzetih iz spoljnih izvora.</p>
+  {% endif %}
+</div>
+{% endblock %}

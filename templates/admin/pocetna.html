@@ -1,0 +1,56 @@
+{% extends "admin/base.html" %}
+{% block title %}Početna{% endblock %}
+{% block content %}
+<div class="head">
+  <div>
+    <h1>Zdravo, {{ korisnik.ime.split(' ')[0] }}</h1>
+    <p>Pregled stanja na sajtu.</p>
+  </div>
+  <a class="btn btn-volt" href="{{ url_for('admin_artikal') }}"><svg><use href="#i-plus"/></svg>Novi artikal</a>
+</div>
+
+<div class="stats s4">
+  <a class="card stat" href="{{ url_for('prodaja.racuni') }}"><span>Danas – promet</span><b>{{ danas.promet_neto | din }}</b></a>
+  <a class="card stat" href="{{ url_for('prodaja.racuni') }}"><span>Danas – računa</span><b>{{ danas.broj_racuna }}</b></a>
+  <a class="card stat" href="{{ url_for('nabavka.za_naruciti') }}"><span>Za naručiti</span><b style="color:{{ 'var(--bad)' if ZA_NARUCITI() else 'inherit' }}">{{ ZA_NARUCITI() }}</b></a>
+  {% if korisnik.uloga == 'admin' %}<a class="card stat" href="{{ url_for('analitika.pregled') }}"><span>Analitika</span><b style="font-size:22px">Pogledaj →</b></a>
+  {% else %}<div class="card stat"><span>Danas – storna</span><b>{{ danas.broj_storna }}</b></div>{% endif %}
+</div>
+<div class="stats">
+  <a class="card stat" href="{{ url_for('admin_artikli') }}"><span>Ukupno artikala</span><b>{{ stat.artikala }}</b></a>
+  <a class="card stat" href="{{ url_for('admin_artikli', status='sakriveni') }}"><span>Sakriveno sa sajta</span><b>{{ stat.sakrivenih }}</b></a>
+  <a class="card stat" href="{{ url_for('admin_artikli', status='nema') }}"><span>Nema na stanju</span><b style="color:{{ 'var(--bad)' if stat.nema_na_stanju }}">{{ stat.nema_na_stanju }}</b></a>
+  <a class="card stat" href="{{ url_for('admin_artikli', status='akcija') }}"><span>Na akciji</span><b>{{ stat.na_akciji }}</b></a>
+  <div class="card stat"><span>Kategorija</span><b>{{ stat.kategorija }}</b></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-pad" style="padding-bottom:0"><h2>Poslednje izmene</h2></div>
+    <div class="table-wrap">
+      <table class="t">
+        <thead><tr><th>Artikal</th><th class="hide-sm">Kategorija</th><th>Izmenjeno</th></tr></thead>
+        <tbody>
+        {% for a in poslednji %}
+          <tr>
+            <td><a class="naziv" href="{{ url_for('admin_artikal', id=a.id) }}">{{ a.naziv }}</a><small>{{ a.sifra }}</small></td>
+            <td class="hide-sm">{{ a.kategorija }}</td>
+            <td style="white-space:nowrap">{{ a.izmenjeno[:16] }}<small>{{ a.izmenio or '' }}</small></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card card-pad">
+    <h2>Radno vreme</h2>
+    <table class="t" style="margin:-6px 0 14px">
+      {% for d in radno_vreme %}
+      <tr><td style="padding:7px 0">{{ d.naziv }}</td>
+          <td class="num" style="padding:7px 0">{% if d.radi %}{{ d.od }} – {{ d.do }}{% else %}<span class="pill off">zatvoreno</span>{% endif %}</td></tr>
+      {% endfor %}
+    </table>
+    <a class="btn btn-line" href="{{ url_for('admin_radno_vreme') }}"><svg><use href="#i-edit"/></svg>Izmeni radno vreme</a>
+  </div>
+</div>
+{% endblock %}

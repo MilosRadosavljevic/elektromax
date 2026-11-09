@@ -1,0 +1,37 @@
+{% extends "admin/base.html" %}
+{% block title %}Kartica – {{ a.naziv }}{% endblock %}
+{% set TIP = {'pocetno': ('Početno stanje', 'off'), 'prodaja': ('Prodaja', 'bad'), 'storno': ('Storno', 'volt'), 'prijem': ('Prijem', 'ok'), 'korekcija': ('Korekcija', 'off')} %}
+{% block content %}
+<div class="head">
+  <div><h1>Kartica artikla</h1><p><a href="{{ url_for('admin_artikal', id=a.id) }}">← {{ a.naziv }}</a> · {{ a.sifra }}</p></div>
+</div>
+<div class="stats s4">
+  <div class="card stat"><span>Trenutno stanje</span><b style="color:{{ 'var(--bad)' if a.stanje <= a.min_kolicina else 'inherit' }}">{{ a.stanje }} {{ a.jedinica_mere }}</b></div>
+  <div class="card stat"><span>Minimalna količina</span><b>{{ a.min_kolicina }}</b></div>
+  <div class="card stat"><span>Nabavna cena</span><b style="font-size:28px">{{ a.nabavna_cena | din if a.nabavna_cena else '—' }}</b></div>
+  <div class="card stat"><span>Dobavljač</span><b style="font-size:22px">{{ a.dobavljac or '—' }}</b></div>
+</div>
+<div class="grid2">
+  <div class="card"><div class="table-wrap"><table class="t siroka">
+    <thead><tr><th>Vreme</th><th>Promena</th><th>Dokument</th><th class="num">Količina</th><th class="num">Stanje posle</th><th>Korisnik</th></tr></thead>
+    <tbody>
+    {% for k in kretanja %}
+      <tr><td style="white-space:nowrap">{{ k.vreme[:16] }}</td><td><span class="pill {{ TIP[k.tip][1] }}">{{ TIP[k.tip][0] }}</span></td>
+        <td style="white-space:nowrap">{% if k.racun_id %}<a href="{{ url_for('prodaja.racun', rid=k.racun_id) }}">{{ k.dokument }}</a>{% elif k.prijem_id %}<a href="{{ url_for('nabavka.prijem', pid=k.prijem_id) }}">{{ k.dokument }}</a>{% else %}{{ k.dokument }}{% endif %}
+          {% if k.napomena %}<small>{{ k.napomena }}</small>{% endif %}</td>
+        <td class="num" style="color:{{ 'var(--ok)' if k.kolicina > 0 else ('var(--bad)' if k.kolicina < 0 else 'inherit') }}">{{ '+' if k.kolicina > 0 }}{{ k.kolicina }}</td>
+        <td class="num"><b>{{ k.stanje_posle }}</b></td><td>{{ k.korisnik or '' }}</td></tr>
+    {% endfor %}
+    </tbody></table></div></div>
+  <form class="card card-pad" method="post">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <h2>Korekcija stanja (popis)</h2>
+    <p class="meta" style="margin:-6px 0 14px">Unesite stvarno izbrojano stanje. Razlika se upisuje kao korekcija.</p>
+    <div class="stack">
+      <div class="field"><label for="novo_stanje">Novo stanje</label><input type="number" min="0" step="1" id="novo_stanje" name="novo_stanje" value="{{ a.stanje }}"></div>
+      <div class="field"><label for="napomena">Razlog *</label><input type="text" id="napomena" name="napomena" placeholder="npr. popis 31.12, oštećena roba"></div>
+      <button class="btn btn-dark" type="submit">Upiši korekciju</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

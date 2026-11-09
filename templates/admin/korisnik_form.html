@@ -1,0 +1,49 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Izmena korisnika' if postojeci else 'Novi korisnik' }}{% endblock %}
+{% macro greska(polje) %}{% if greske.get(polje) %}<span class="err-msg">{{ greske[polje] }}</span>{% endif %}{% endmacro %}
+{% block content %}
+<div class="head">
+  <div>
+    <h1>{{ 'Izmena korisnika' if postojeci else 'Novi korisnik' }}</h1>
+    <p><a href="{{ url_for('admin_korisnici') }}">← Nazad na korisnike</a></p>
+  </div>
+</div>
+<form method="post" novalidate style="max-width:620px">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  <div class="card card-pad">
+    <div class="fields">
+      <div class="field {{ 'err' if greske.ime }}">
+        <label for="ime">Ime i prezime *</label>
+        <input type="text" id="ime" name="ime" value="{{ k.ime or '' }}" autofocus>
+        {{ greska('ime') }}
+      </div>
+      <div class="field {{ 'err' if greske.korisnicko_ime }}">
+        <label for="ki">Korisničko ime *</label>
+        <input type="text" id="ki" name="korisnicko_ime" value="{{ k.korisnicko_ime or '' }}" autocomplete="off">
+        {{ greska('korisnicko_ime') }}
+      </div>
+      <div class="field {{ 'err' if greske.lozinka }}">
+        <label for="loz">{{ 'Nova lozinka' if postojeci else 'Lozinka *' }}</label>
+        <input type="password" id="loz" name="lozinka" autocomplete="new-password">
+        <span class="help">{{ 'Ostavite prazno da ostane stara.' if postojeci else 'Najmanje 6 znakova.' }}</span>
+        {{ greska('lozinka') }}
+      </div>
+      <div class="field {{ 'err' if greske.uloga }}">
+        <label for="uloga">Uloga</label>
+        <select id="uloga" name="uloga">
+          <option value="radnik" {{ 'selected' if k.uloga == 'radnik' }}>Radnik – artikli i radno vreme</option>
+          <option value="admin" {{ 'selected' if k.uloga == 'admin' }}>Admin – sve</option>
+        </select>
+        {{ greska('uloga') }}
+      </div>
+      <div class="field full">
+        <label class="check"><input type="checkbox" name="aktivan" value="1" {{ 'checked' if k.aktivan }}><span><b>Aktivan nalog</b><span>Isključite da korisnik više ne može da se prijavi.</span></span></label>
+      </div>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-volt" type="submit">Sačuvaj</button>
+    <a class="btn btn-line" href="{{ url_for('admin_korisnici') }}">Otkaži</a>
+  </div>
+</form>
+{% endblock %}

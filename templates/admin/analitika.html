@@ -1,0 +1,154 @@
+{% extends "admin/base.html" %}
+{% block title %}Analitika{% endblock %}
+{% macro promena(sad, pre, obrnuto=false) %}
+  {% if pre %}{% set p = (sad - pre) / (pre if pre > 0 else -pre) * 100 %}
+    {% set dobro = (p >= 0) != obrnuto %}
+    <span class="delta {{ 'gore' if dobro else 'dole' }}">{{ '▲' if p >= 0 else '▼' }} {{ '%.1f' | format(p | abs) }}%</span>
+  {% else %}<span class="delta">—</span>{% endif %}
+{% endmacro %}
+{% set NACIN = {'gotovina': 'Gotovina', 'kartica': 'Platna kartica', 'prenos': 'Prenos na račun'} %}
+{% block content %}
+<div class="head">
+  <div>
+    <h1>Analitika prodaje</h1>
+    <p>{{ od.strftime('%d.%m.%Y.') }} – {{ do.strftime('%d.%m.%Y.') }} ({{ trajanje }} dana) · poređenje sa {{ pre_od.strftime('%d.%m.') }} – {{ pre_do.strftime('%d.%m.%Y.') }} · storna su oduzeta, iznosi sa PDV-om osim zarade</p>
+  </div>
+</div>
+
+<form class="period card" id="period">
+  {% for k, t in [('7', '7 dana'), ('30', '30 dana'), ('90', '90 dana'), ('mesec', 'Ovaj mesec'), ('prosli', 'Prošli mesec'), ('365', 'Godina')] %}
+  <a class="per {{ 'on' if period == k }}" href="{{ url_for('analitika.pregled', period=k) }}">{{ t }}</a>
+  {% endfor %}
+  <span class="per-sep"></span>
+  <input type="hidden" name="period" value="custom">
+  <input type="date" name="od" value="{{ od }}" aria-label="Od"> – <input type="date" name="do" value="{{ do }}" aria-label="Do">
+  <button class="btn btn-dark btn-sm" type="submit">Prikaži</button>
+</form>
+
+<div class="stats kpi">
+  <div class="card stat"><span>Promet (neto)</span><b>{{ k.promet | din }}</b>{{ promena(k.promet, kp.promet) }}</div>
+  <div class="card stat"><span>Broj računa</span><b>{{ k.racuna }}</b>{{ promena(k.racuna, kp.racuna) }}</div>
+  <div class="card stat"><span>Prosečan račun</span><b>{{ k.prosek | din }}</b>{{ promena(k.prosek, kp.prosek) }}</div>
+  <div class="card stat"><span>Bruto zarada (bez PDV)</span><b>{{ k.zarada | din }}</b>{{ promena(k.zarada, kp.zarada) }}</div>
+  <div class="card stat"><span>Marža</span><b>{{ '%.1f' | format(k.marza) }}%</b><span class="delta">pre: {{ '%.1f' | format(kp.marza) }}%</span></div>
+  <div class="card stat"><span>Dati popusti</span><b>{{ k.popusti | din }}</b>{{ promena(k.popusti, kp.popusti, true) }}</div>
+  <div class="card stat"><span>Storna</span><b>{{ k.storna }}</b><span class="delta">{{ k.storna_iznos | din }}</span></div>
+  <div class="card stat"><span>Vrednost zaliha (nab.)</span><b>{{ zalihe | din }}</b><span class="delta">danas</span></div>
+</div>
+{% if k.bez_nabavne %}<p class="meta" style="margin:-10px 0 16px">Napomena: {{ k.bez_nabavne }} stavki nema nabavnu cenu, pa nisu uračunate u zaradu.</p>{% endif %}
+
+<div class="card card-pad viz-kartica">
+  <div class="viz-zag"><h2>Promet po danu</h2><span class="meta">Pređite mišem preko stubića za detalje</span></div>
+  <div id="g-dani" class="viz"></div>
+</div>
+
+<div class="grid2 analitika-red">
+  <div class="card card-pad viz-kartica">
+    <div class="viz-zag"><h2>Kada se najviše prodaje</h2><span class="meta">promet po danu u nedelji i satu</span></div>
+    <div id="g-toplota" class="viz"></div>
+    <div class="skala-legenda"><span>manje</span><span class="skala-traka" id="skala"></span><span>više</span></div>
+  </div>
+  <div class="card card-pad viz-kartica">
+    <div class="viz-zag"><h2>Po kategoriji</h2><span class="meta">promet</span></div>
+    <div id="g-kategorije" class="viz"></div>
+  </div>
+</div>
+
+<div class="card viz-kartica" style="margin-top:18px">
+  <div class="card-pad viz-zag" style="padding-bottom:6px">
+    <h2>Najprodavaniji artikli</h2>
+    <div class="seg" id="metrika">
+      <button type="button" data-m="promet" class="on">Promet</button>
+      <button type="button" data-m="kolicina">Količina</button>
+      <button type="button" data-m="zarada">Zarada</button>
+    </div>
+  </div>
+  <div class="table-wrap"><table class="t siroka" id="t-artikli">
+    <thead><tr><th>#</th><th>Artikal</th><th class="num">Količina</th><th class="num">Računa</th><th class="num">Promet</th><th class="num">Zarada</th><th style="width:28%"></th></tr></thead>
+    <tbody></tbody></table></div>
+  <div class="card-pad" style="padding-top:10px"><button class="btn btn-line btn-sm" type="button" id="svi-artikli">Prikaži sve ({{ artikli | length }})</button></div>
+</div>
+
+<div class="grid2 analitika-red">
+  <div class="card card-pad viz-kartica">
+    <div class="viz-zag"><h2>Načini plaćanja</h2></div>
+    <div id="g-placanja" class="viz"></div>
+  </div>
+  <div class="card viz-kartica">
+    <div class="card-pad" style="padding-bottom:0"><h2>Po kasiru</h2></div>
+    <div class="table-wrap"><table class="t">
+      <thead><tr><th>Kasir</th><th class="num">Računa</th><th class="num">Promet</th><th class="num">Prosek</th><th class="num">Popusti</th><th class="num">Storna</th></tr></thead>
+      <tbody>{% for x in kasiri %}<tr><td><b>{{ x.ime }}</b></td><td class="num">{{ x.racuna }}</td><td class="num">{{ x.promet | din }}</td>
+        <td class="num">{{ (x.promet / x.racuna) | din if x.racuna else '—' }}</td><td class="num">{{ x.popusti | din }}</td><td class="num">{{ x.storna }}</td></tr>
+      {% else %}<tr><td colspan="6" style="color:var(--muted)">Nema prodaje u periodu.</td></tr>{% endfor %}</tbody></table></div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:18px">
+  <div class="card-pad" style="padding-bottom:0"><h2>Ne prodaje se, a ima na stanju</h2>
+    <p class="meta" style="margin:-8px 0 8px">Artikli bez ijedne prodaje u izabranom periodu – novac „zarobljen“ u zalihama. Kandidati za akciju ili manju nabavku.</p></div>
+  <div class="table-wrap"><table class="t">
+    <thead><tr><th>Artikal</th><th class="num">Stanje</th><th class="num">Nab. cena</th><th class="num">Vrednost zalihe</th></tr></thead>
+    <tbody>{% for x in mrtvi[:15] %}<tr><td><a class="naziv" href="{{ url_for('nabavka.kartica', aid=x.id) }}">{{ x.naziv }}</a><small>{{ x.sifra }}</small></td>
+      <td class="num">{{ x.stanje }} {{ x.jm }}</td><td class="num">{{ x.nabavna_cena | din if x.nabavna_cena else '—' }}</td><td class="num"><b>{{ x.vrednost | din }}</b></td></tr>
+    {% else %}<tr><td colspan="4" style="color:var(--ok)">Svi artikli na stanju su se prodavali u ovom periodu.</td></tr>{% endfor %}</tbody></table></div>
+</div>
+
+<script id="podaci" type="application/json">{{ {'dani': dani, 'toplota': toplota, 'kategorije': kategorije, 'artikli': artikli, 'placanja': placanja} | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/grafikoni.js') }}"></script>
+<script>
+  const P = JSON.parse(document.getElementById("podaci").textContent);
+  const {din} = Grafikoni;
+  const NACIN = {gotovina: "Gotovina", kartica: "Platna kartica", prenos: "Prenos na račun"};
+  const DATUM = d => d.slice(8, 10) + "." + d.slice(5, 7) + ".";
+
+  Grafikoni.stubici(document.getElementById("g-dani"), P.dani, {
+    opis: "Promet po danu", oznaka: d => DATUM(d.d),
+    tooltip: d => `<b>${d.dan} ${DATUM(d.d)}</b><br>Promet: <b>${din(d.v, 2)} RSD</b><br>Računa: ${d.n}`
+  });
+
+  const ukupnoT = P.toplota.reduce((s, c) => s + Math.max(0, c.v), 0) || 1;
+  Grafikoni.toplota(document.getElementById("g-toplota"), P.toplota, {
+    opis: "Promet po danu u nedelji i satu",
+    dani: [[1, "Pon"], [2, "Uto"], [3, "Sre"], [4, "Čet"], [5, "Pet"], [6, "Sub"]],
+    sati: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+    tooltip: (dan, sat, c) => `<b>${dan}, ${sat}–${sat + 1}h</b><br>` + (c ? `Promet: <b>${din(c.v)} RSD</b> (${din(c.v / ukupnoT * 100, 1)}%)<br>Računa: ${c.n}` : "Nema prodaje")
+  });
+  document.getElementById("skala").style.background = `linear-gradient(90deg, ${Grafikoni.SKALA.join(",")})`;
+
+  const ukK = P.kategorije.reduce((s, x) => s + x.promet, 0) || 1;
+  Grafikoni.trake(document.getElementById("g-kategorije"), P.kategorije.map(x => ({label: x.naziv, v: x.promet, z: x.zarada})), {
+    opis: "Promet po kategoriji", levo: 150, vrednost: d => Grafikoni.kratko(d.v),
+    tooltip: d => `<b>${d.label}</b><br>Promet: <b>${din(d.v)} RSD</b> (${din(d.v / ukK * 100, 1)}%)<br>Zarada: ${din(d.z)} RSD`
+  });
+
+  const ukP = P.placanja.reduce((s, x) => s + x.iznos, 0) || 1;
+  Grafikoni.trake(document.getElementById("g-placanja"), P.placanja.map(x => ({label: NACIN[x.nacin], v: x.iznos, n: x.racuna})), {
+    opis: "Promet po načinu plaćanja", levo: 130, vrednost: d => din(d.v / ukP * 100, 1) + "%",
+    tooltip: d => `<b>${d.label}</b><br>${din(d.v)} RSD · ${d.n} računa`
+  });
+
+  // tabela artikala sa izborom mere
+  let mera = "promet", sve = false;
+  function tabela() {
+    const lista = [...P.artikli].sort((a, b) => b[mera] - a[mera]).slice(0, sve ? undefined : 10);
+    const max = Math.max(1, ...lista.map(x => x[mera]));
+    document.querySelector("#t-artikli tbody").innerHTML = lista.map((x, i) => `
+      <tr><td>${i + 1}</td><td><b>${x.naziv}</b><small>${x.sifra}</small></td>
+        <td class="num">${din(x.kolicina)} ${x.jm}</td><td class="num">${x.racuna}</td>
+        <td class="num">${din(x.promet)}</td><td class="num">${din(x.zarada)}</td>
+        <td><div class="traka"><span style="width:${Math.max(0, x[mera] / max * 100)}%"></span></div></td></tr>`).join("");
+  }
+  document.querySelectorAll("#metrika button").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll("#metrika button").forEach(x => x.classList.toggle("on", x === b));
+    mera = b.dataset.m; tabela();
+  }));
+  document.getElementById("svi-artikli").addEventListener("click", e => {
+    sve = !sve; e.target.textContent = sve ? "Samo prvih 10" : `Prikaži sve (${P.artikli.length})`; tabela();
+  });
+  tabela();
+</script>
+{% endblock %}

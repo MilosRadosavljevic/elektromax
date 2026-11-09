@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="sr-Latn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Prijava | Elektromax admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+{% include "_ikonice.html" %}
+<div class="login">
+  <form class="card" method="post">
+    <a class="logo" href="{{ url_for('pocetna') }}">
+      <span class="logo-mark"><svg><use href="#i-bolt"/></svg></span>
+      <span><span class="logo-text">Elektro<span>max</span></span><small>Admin panel</small></span>
+    </a>
+    <h1>Prijava</h1>
+    <p>Prijavite se da biste uređivali artikle i radno vreme.</p>
+    {% for kat, poruka in get_flashed_messages(with_categories=true) %}
+      <div class="flash {{ kat }}" role="alert">{{ poruka }}</div>
+    {% endfor %}
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <div class="stack">
+      <div class="field">
+        <label for="k">Korisničko ime</label>
+        <input type="text" id="k" name="korisnicko_ime" autocomplete="username" required autofocus>
+      </div>
+      <div class="field">
+        <label for="l">Lozinka</label>
+        <input type="password" id="l" name="lozinka" autocomplete="current-password" required>
+      </div>
+      <button class="btn btn-volt" type="submit" style="justify-content:center;padding:12px">Prijavi se</button>
+    </div>
+    <div class="demo-info">Demo nalozi su navedeni u fajlu <code>README.md</code>.</div>
+  </form>
+</div>
+</body>
+</html>

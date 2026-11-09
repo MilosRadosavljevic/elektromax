@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ r.broj }}{% endblock %}
+{% block content %}
+<div class="head">
+  <div><h1>{{ {'racun': 'Račun', 'predracun': 'Predračun', 'storno': 'Storno račun'}[r.tip] }} {{ r.broj }}</h1>
+    <p><a href="{{ url_for('prodaja.racuni') }}">← Svi računi</a></p></div>
+  <a class="btn btn-line" href="{{ url_for('prodaja.racun_stampa', rid=r.id) }}" target="_blank"><svg><use href="#i-print"/></svg>A4 / PDF</a>
+</div>
+<div class="grid2">
+  <div class="stack">
+    <div class="card"><div class="table-wrap"><table class="t siroka">
+      <thead><tr><th>Artikal</th><th class="num">Kol.</th><th class="num">Cena</th><th class="num">Popust</th><th class="num">Iznos</th>{% if r.tip == 'racun' %}<th class="num">Vraćeno</th>{% endif %}</tr></thead>
+      <tbody>
+      {% for s in r.stavke %}
+        <tr><td>{% if s.artikal_id %}<a class="naziv" href="{{ url_for('nabavka.kartica', aid=s.artikal_id) }}">{{ s.naziv }}</a>{% else %}<b>{{ s.naziv }}</b>{% endif %}<small>{{ s.sifra }}</small></td>
+          <td class="num">{{ s.kolicina | broj }} {{ s.jedinica_mere }}</td><td class="num">{{ s.cena | din }}</td>
+          <td class="num">{{ (s.popust_proc | broj ~ '%') if s.popust else '' }}</td><td class="num"><b>{{ s.ukupno | din }}</b></td>
+          {% if r.tip == 'racun' %}<td class="num">{{ s.storno_kolicina | broj if s.storno_kolicina else '' }}</td>{% endif %}</tr>
+      {% endfor %}
+      </tbody></table></div></div>
+    <div class="card card-pad">
+      <h2>Podaci</h2>
+      <p>Vreme: {{ r.vreme }}<br>Kasir: {{ r.kasir }}<br>
+        {% if r.kupac %}Kupac: <a href="{{ url_for('prodaja.kupac', kid=r.kupac.id) }}">{{ r.kupac.naziv }}</a> (PIB {{ r.kupac.pib or '—' }})<br>{% endif %}
+        {% if r.referentni_broj %}Referentni dokument: <a href="{{ url_for('prodaja.racun', rid=r.referentni_id) }}">{{ r.referentni_broj }}</a><br>{% endif %}
+        {% if r.popust %}Popust: {{ r.popust | din }}{% if r.odobrio %} · odobrio {{ r.odobrio }}{% endif %}{% if r.popust_razlog %} · {{ r.popust_razlog }}{% endif %}<br>{% endif %}
+        {% if r.vazi_do %}Važi do: {{ r.vazi_do }}<br>{% endif %}
+        Plaćanje: {% for p in r.placanja %}{{ p.nacin }} {{ p.iznos | din }}{{ ', ' if not loop.last }}{% else %}—{% endfor %}<br>
+        Fiskalizacija: {{ r.fiskal_rezim }}{% if r.fiskal_broj %} · {{ r.fiskal_broj }}{% endif %}</p>
+      {% if r.storna %}<p><b>Storna:</b> {% for x in r.storna %}<a href="{{ url_for('prodaja.racun', rid=x.id) }}">{{ x.broj }}</a> ({{ x.ukupno | din }}){{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+      <p class="meta">Storno i naplata predračuna rade se na kasi (Izdati računi, F10).</p>
+    </div>
+  </div>
+  <div class="card card-pad">
+    <h2>Isečak</h2>
+    <div class="isecak">{{ isecak | safe }}</div>
+  </div>
+</div>
+{% endblock %}

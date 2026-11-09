@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Stranica nije pronađena | Elektromax{% endblock %}
+{% block content %}
+<div class="wrap" style="padding:110px 24px;text-align:center">
+  <span class="eyebrow">Greška 404</span>
+  <h1 class="h2" style="margin:14px 0 12px">Ovde nema struje</h1>
+  <p style="color:var(--muted);margin-bottom:28px">Stranica ili artikal koji tražite ne postoji ili više nije u ponudi.</p>
+  <a class="btn btn-volt" href="{{ url_for('katalog') }}">Pogledajte katalog</a>
+</div>
+{% endblock %}

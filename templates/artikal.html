@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "_makroi.html" import cena, lager %}
+{% block title %}{{ a.naziv }} | Elektromax{% endblock %}
+{% block description %}{{ a.naziv }} – {{ a.opis }} Elektromax, Smederevska Palanka.{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <div class="detalj">
+    <div>
+    <div class="art-img">
+      {% if a.slika %}<img src="{{ url_for('static', filename='uploads/' ~ a.slika) }}" alt="{{ a.naziv }}">
+      {% else %}<svg><use href="#i-{{ a.ikonica }}"/></svg>{% endif %}
+      {% if a.akcijska_cena is not none %}<span class="badge badge-akcija">Akcija</span>{% endif %}
+    </div>
+    {% if a.slika and a.slika_kredit %}
+    <p class="kredit">{% if a.slika_izvor %}<a href="{{ a.slika_izvor }}" target="_blank" rel="noopener nofollow">{{ a.slika_kredit }}</a>{% else %}{{ a.slika_kredit }}{% endif %} · ilustracija, izgled artikla u radnji može se razlikovati</p>
+    {% endif %}
+    </div>
+    <div>
+      <div class="crumbs" style="color:var(--muted)">
+        <a href="{{ url_for('katalog') }}">Katalog</a> / <a href="{{ url_for('katalog', kategorija=a.kategorija_slug) }}">{{ a.kategorija }}</a>
+      </div>
+      <h1>{{ a.naziv }}</h1>
+      <div class="sifra">Šifra: {{ a.sifra }}</div>
+      {{ cena(a) }}
+      {{ lager(a) }}
+      {% if a.opis %}<p class="opis">{{ a.opis }}</p>{% endif %}
+      <div class="spec">
+        <div><span>Kategorija</span><b>{{ a.kategorija }}</b></div>
+        {% if a.proizvodjac %}<div><span>Proizvođač</span><b>{{ a.proizvodjac }}</b></div>{% endif %}
+        <div><span>Jedinica mere</span><b>{{ a.jedinica_mere }}</b></div>
+        <div><span>Dostupnost</span><b>{{ 'Na stanju' if a.stanje > 0 else 'Po porudžbini' }}</b></div>
+      </div>
+      <div class="napomena">Ovo nije online prodavnica – artikal kupujete u radnji. Pozovite da proverite količinu ili da ga odvojimo za vas.</div>
+      <div class="hero-cta" style="margin-top:0">
+        <a class="btn btn-volt" href="tel:+381654887788"><svg><use href="#i-phone"/></svg>Pozovite 065 488 77 88</a>
+        <a class="btn btn-line" href="{{ url_for('katalog', kategorija=a.kategorija_slug) }}"><svg><use href="#i-back"/></svg>Još iz kategorije</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

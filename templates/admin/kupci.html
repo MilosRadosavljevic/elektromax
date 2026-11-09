@@ -1,0 +1,20 @@
+{% extends "admin/base.html" %}
+{% block title %}Kupci{% endblock %}
+{% block content %}
+<div class="head">
+  <div><h1>Kupci</h1><p>Pravna lica za račune i predračune na A4 (sa PIB-om). Kupca može da doda i kasir na kasi.</p></div>
+  <a class="btn btn-volt" href="{{ url_for('prodaja.kupac') }}"><svg><use href="#i-plus"/></svg>Novi kupac</a>
+</div>
+<div class="card">
+  <form class="filters"><input name="q" value="{{ q }}" placeholder="Naziv ili PIB…"><button class="btn btn-dark">Traži</button></form>
+  <div class="table-wrap"><table class="t siroka">
+    <thead><tr><th>Naziv</th><th>PIB</th><th class="hide-sm">Mesto</th><th class="num">Računa</th><th class="num">Promet</th><th class="hide-sm">Poslednja kupovina</th></tr></thead>
+    <tbody>
+    {% for k in lista %}
+      <tr><td><a class="naziv" href="{{ url_for('prodaja.kupac', kid=k.id) }}">{{ k.naziv }}</a><small>{{ k.adresa }}</small></td>
+        <td>{{ k.pib }}</td><td class="hide-sm">{{ k.mesto }}</td><td class="num">{{ k.racuna }}</td>
+        <td class="num"><b>{{ k.promet | din }}</b></td><td class="hide-sm">{{ k.poslednji[:10] if k.poslednji else '—' }}</td></tr>
+    {% else %}<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">Nema kupaca.</td></tr>{% endfor %}
+    </tbody></table></div>
+</div>
+{% endblock %}
