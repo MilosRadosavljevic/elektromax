@@ -115,3 +115,7 @@ Testovi: `.venv\Scripts\python -m unittest discover tests -v`
 - `init_db.py` briše sve i pravi bazu ispočetka; `demo_podaci.py` dodaje 90 dana prodaje (samo ako nema računa).
 - Za produkciju: fiskalizacija (vidi gore), pravi server (waitress/gunicorn), HTTPS, rezervne kopije,
   `ELEKTROMAX_SECRET` u okruženju, ograničen broj pokušaja prijave, rad kase bez interneta.
+
+## License
+
+© 2026 Miloš Radosavljević. **All rights reserved.** The code is public only so it can be viewed and evaluated; no use, copying, modification or distribution is permitted without written permission. See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
